@@ -1,0 +1,162 @@
+---
+output: 
+  rmarkdown::html_document:
+    theme: flatly
+---
+
+<h2><b> ANALYZING COUNTY ELECTION RESULTS </b></h2>
+
+```{r, load packages and set themes, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+
+# Load packages
+library(ggplot2, quietly = TRUE)
+library(ggthemes, quietly = TRUE)
+library(extrafont, quietly = TRUE)
+library(scales, quietly = TRUE)
+library(rvest, quietly = TRUE)
+library(plyr, quietly = TRUE)
+library(dplyr, quietly = TRUE)
+library(rgdal, quietly = TRUE)
+library(plotly, quietly = TRUE)
+library(stringr, quietly = TRUE)
+
+# Set plot theme
+theme_set(
+  theme_bw(base_family = 'Segoe UI', base_size = 12) +
+    theme(
+      plot.title = element_text(face = 'bold', hjust = 0),
+      text = element_text(colour = '#445359'),
+      panel.background = element_rect('#ffffff'),
+      strip.background = element_rect('#ffffff', colour = 'white'),
+      plot.background = element_rect('#ffffff'),
+      panel.border = element_rect(colour = '#ffffff'),
+      panel.grid.major.x = element_blank(),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor.y = element_blank(),
+      legend.background = element_rect('#ffffff'),
+      legend.title = element_blank(),
+      legend.position = 'right',
+      legend.direction = 'vertical',
+      legend.key = element_blank(),
+      strip.text = element_text(face = 'bold', size = 10),
+      axis.text = element_text(face = 'bold', size = 9),
+      axis.title = element_blank(),
+      axis.ticks = element_blank()
+    )
+)
+
+```
+
+<h2><b> Load Data & Clean </b></h2>
+
+```{r, load data & clean, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+
+## Pull Election Results Data
+# -- Data pulled from https://github.com/tonmcg/County_Level_Election_Results_12-16
+
+# Pull from github repo
+election.results.df <- read.csv('US_County_Level_Presidential_Results_12-16.csv',
+                                header = TRUE,
+                                stringsAsFactors = FALSE)
+
+# Take a look at the data to see what needs to be cleaned up
+head(election.results.df)
+glimpse(election.results.df)
+
+# Remove X index
+election.results.df$X <- NULL
+
+# Fix FIPS codes
+election.results.df$combined_fips <- sapply(election.results.df$combined_fips, function(x) { 
+  
+  if (nchar(x) < 5) { 
+    paste0('0', x)
+  } else { 
+    x
+  }
+  
+  })
+
+# Remove the other FIPS column
+election.results.df$FIPS <- NULL
+
+## Pull Voter Survey Data
+
+## Pull Map Data
+
+# Pull in shapefile
+cty <- readOGR(dsn = "shapefiles", 
+               layer = "tl_2010_us_county10")
+
+cty@data$id <- rownames(cty@data)
+
+# Convert polygons in cty to a data frame for plotting
+cty.df <- fortify(cty)
+
+# Join columns
+cty.df <- merge(cty.df, 
+                cty@data, 
+                by = "id")
+
+```
+
+<h2><b> Manipulating The Data </b></h2>
+
+
+```{r, manipulate data, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+
+# Join columns from df to cty
+map.df <- merge(cty.df,
+               election.results.df, 
+               by.x = 'GEOID10',
+               by.y = 'combined_fips',
+               all.x = TRUE,
+               sort = FALSE)
+
+map.df <- left_join(cty.df,
+                    election.results.df,
+                    by = c('GEOID10' = 'combined_fips'))
+
+```
+
+```{r, visualization, fig.width=6, fig.height=10}
+
+## Build Plot
+
+# Remove AK and HI
+plt.dat <- map.df %>%
+  filter(state_abbr != 'AK',
+         state_abbr != 'HI')
+
+# Identify county winner for faceting down the road
+plt.dat$winner <- sapply(plt.dat$per_gop_2016, function(x) { 
+  
+  if (x > .5) {'Trump'} else {'Clinton'}
+  
+})
+
+# Build plot
+plt <- ggplot(plt.dat, aes(x = long, y = lat, group = group, fill = 100*per_gop_2016)) +
+  scale_fill_gradient2(low = "#008abc",
+                      mid = "#ffffff",
+                      high = "#c71f16",
+                      midpoint = 50,
+                      na.value = "#f0f2f3") + 
+  geom_polygon(colour = '#f0f2f3', size = 0.1) +
+  coord_equal() + 
+  labs(title = 'County Level Election Results',
+       subtitle = 'Shading is based on the share of votes for counties won by Clinton (blue) and Trump (red)') +
+  theme(axis.text = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        legend.position = 'none')
+
+# Save
+ggsave(filename = 'county_results.png',
+       plot = plt,
+       type = 'cairo-png',
+       height = 6,
+       width = 12,
+       units = 'in')
+
+
+```
