@@ -52,10 +52,8 @@ theme_set(
 ```{r, load data & clean, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
 
 ## Pull Election Results Data
-# -- Data pulled from https://github.com/tonmcg/County_Level_Election_Results_12-16
-
-# Pull from github repo
-election.results.df <- read.csv('US_County_Level_Presidential_Results_12-16.csv',
+# -- https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/MLLQDH
+election.results.df <- read.csv('president-wide.csv',
                                 header = TRUE,
                                 stringsAsFactors = FALSE)
 
@@ -63,24 +61,50 @@ election.results.df <- read.csv('US_County_Level_Presidential_Results_12-16.csv'
 head(election.results.df)
 glimpse(election.results.df)
 
-# Remove X index
-election.results.df$X <- NULL
+## Fix FIPS codes
 
-# Fix FIPS codes
-election.results.df$combined_fips <- sapply(election.results.df$combined_fips, function(x) { 
-  
-  if (nchar(x) < 5) { 
-    paste0('0', x)
-  } else { 
-    x
-  }
-  
-  })
+# States w/ leading 0s
+zeroes <- c('AK', 'AL', 'AZ', 'AR', 'CA', 'CO', 'CT')
 
-# Remove the other FIPS column
-election.results.df$FIPS <- NULL
+# Fix states w/ leading 0s
+election.results.df2 <- election.results.df %>% 
+  filter(state %in% zeroes) %>% 
+  mutate(fips_fixed = paste0(0, substr(fipscode, 1, 4)))
 
-## Pull Voter Survey Data
+# Fix states w/o leading 0s
+election.results.df3 <- election.results.df %>% 
+  filter(!(state %in% zeroes)) %>% 
+  mutate(fips_fixed = substr(fipscode, 1, 5))
+
+# Combine
+election.results.df <- rbind(election.results.df2,
+                             election.results.df3)
+
+# Remove two party thing
+election.results.df$dem.two.party <- NULL
+
+# Aggregate up to county where applicable
+election.results.agg <- election.results.df %>% 
+  group_by(fips_fixed) %>%
+  select(-one_of('office', 'state', 'jurisdiction', 'fipscode')) %>%
+  summarise_each(funs(sum))
+
+# Remove NA values
+election.results.agg[is.na(election.results.agg)] <- 0
+
+# Calculate % of vote for each candidate
+election.results.agg[, c(2:6)] <- election.results.agg[, c(2:6)] / rowSums(election.results.agg[, c(2:6)])
+
+# Bring back state and jurisdiction
+election.results.final <- election.results.df %>% 
+  select(fips_fixed, state, jurisdiction)
+
+election.results.final <- left_join(election.results.agg,
+                                    election.results.final, 
+                                    by = 'fips_fixed')
+
+# Write to csv
+write.csv(election.results.final, 'county_results_clean.csv', row.names = FALSE)
 
 ## Pull Map Data
 
@@ -106,16 +130,9 @@ cty.df <- merge(cty.df,
 ```{r, manipulate data, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
 
 # Join columns from df to cty
-map.df <- merge(cty.df,
-               election.results.df, 
-               by.x = 'GEOID10',
-               by.y = 'combined_fips',
-               all.x = TRUE,
-               sort = FALSE)
-
 map.df <- left_join(cty.df,
-                    election.results.df,
-                    by = c('GEOID10' = 'combined_fips'))
+                    election.results.agg,
+                    by = c('GEOID10' = 'fips_fixed'))
 
 ```
 
@@ -125,23 +142,29 @@ map.df <- left_join(cty.df,
 
 # Remove AK and HI
 plt.dat <- map.df %>%
-  filter(state_abbr != 'AK',
-         state_abbr != 'HI')
+  filter(STATEFP10 != '02',
+         STATEFP10 != '15',
+         STATEFP10 != '43')
 
 # Identify county winner for faceting down the road
-plt.dat$winner <- sapply(plt.dat$per_gop_2016, function(x) { 
+plt.dat$winner <- sapply(plt.dat$trump, function(x) { 
   
-  if (x > .5) {'Trump'} else {'Clinton'}
-  
+  if (is.na(x)) {
+    NA
+  } else if (x > .5) {
+      'Trump'
+  } else {
+    'Clinton'
+  }
 })
-
+  
 # Build plot
-plt <- ggplot(plt.dat, aes(x = long, y = lat, group = group, fill = 100*per_gop_2016)) +
+plt <- ggplot(plt.dat, aes(x = long, y = lat, group = group, fill = 100*trump)) +
   scale_fill_gradient2(low = "#008abc",
                       mid = "#ffffff",
                       high = "#c71f16",
                       midpoint = 50,
-                      na.value = "#f0f2f3") + 
+                      na.value = "#A6A5A5") + 
   geom_polygon(colour = '#f0f2f3', size = 0.1) +
   coord_equal() + 
   labs(title = 'County Level Election Results',
