@@ -13,7 +13,7 @@ library(ggplot2, quietly = TRUE)
 library(ggthemes, quietly = TRUE)
 library(extrafont, quietly = TRUE)
 library(scales, quietly = TRUE)
-library(rvest, quietly = TRUE)
+library(acs, quietly = TRUE)
 library(plyr, quietly = TRUE)
 library(dplyr, quietly = TRUE)
 library(rgdal, quietly = TRUE)
@@ -122,6 +122,68 @@ cty.df <- merge(cty.df,
                 cty@data, 
                 by = "id")
 
+## Adding County Demographics
+
+# Pull in county data from Census Bureau API for all states
+api.key.install(key='0d49769f4920428f1240cd67d86ee8d61ebaa4bc')
+
+# create a geographic set to grab tabular data (acs)
+geo <- geo.make(state="*",
+                county="*")
+
+# Pull race data
+# -- Table B02001
+race <- acs.fetch(endyear = 2015, span = 5, geography = geo,
+                    table.number = "B02001", col.names = "pretty")
+
+# convert to a data.frame for merging
+race_df <- data.frame(paste0(str_pad(race@geography$state, 2, "left", pad="0"), 
+                               str_pad(race@geography$county, 3, "left", pad="0")), 
+                        race@estimate, 
+                        stringsAsFactors = FALSE)
+names(race_df)[1] <- 'geoid'
+
+# Pull employment data
+# -- Table B23001
+employment <- acs.fetch(endyear = 2015, span = 5, geography = geo,
+                        table.number = "B23001", col.names = "pretty")
+
+# convert to a data.frame for merging
+employment_df <- data.frame(paste0(str_pad(employment@geography$state, 2, "left", pad="0"), 
+                               str_pad(employment@geography$county, 3, "left", pad="0")), 
+                        employment@estimate, 
+                        stringsAsFactors = FALSE)
+names(employment_df)[1] <- 'geoid'
+
+
+# Pull income data
+# -- Table B19001	
+income <- acs.fetch(endyear = 2015, span = 5, geography = geo,
+                        table.number = "B19001", col.names = "pretty")
+
+# convert to a data.frame for merging
+income_df <- data.frame(paste0(str_pad(income@geography$state, 2, "left", pad="0"), 
+                               str_pad(income@geography$county, 3, "left", pad="0")), 
+                        income@estimate, 
+                        stringsAsFactors = FALSE)
+names(income_df)[1] <- 'geoid'
+
+
+# Pull occupation data
+# -- Table B24124	
+occupation <- acs.fetch(endyear = 2015, span = 5, geography = geo,
+                        table.number = "B24124", col.names = "pretty")
+
+# convert to a data.frame for merging
+occupation_df <- data.frame(paste0(str_pad(occupation@geography$state, 2, "left", pad="0"), 
+                               str_pad(occupation@geography$county, 3, "left", pad="0")), 
+                        occupation@estimate, 
+                        stringsAsFactors = FALSE)
+names(occupation_df)[1] <- 'geoid'
+
+# Merge all demographic data together
+demographic.total <- left_join(race_df, left_join(income_df, left_join(employment_df, occupation_df)))
+
 ```
 
 <h2><b> Manipulating The Data </b></h2>
@@ -129,9 +191,17 @@ cty.df <- merge(cty.df,
 
 ```{r, manipulate data, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
 
+# Join demographic data to election results
+election.results.demog <- left_join(election.results.final,
+                                    demographic.total,
+                                    by = c('fips_fixed' = 'geoid'))
+
+# Write file to csv
+write.csv(election.results.demog, 'election_results_with_demographics.csv', row.names = FALSE)
+
 # Join columns from df to cty
 map.df <- left_join(cty.df,
-                    election.results.agg,
+                    election.results.demog,
                     by = c('GEOID10' = 'fips_fixed'))
 
 ```
