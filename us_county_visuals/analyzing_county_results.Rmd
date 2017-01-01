@@ -143,6 +143,18 @@ race_df <- data.frame(paste0(str_pad(race@geography$state, 2, "left", pad="0"),
                         stringsAsFactors = FALSE)
 names(race_df)[1] <- 'geoid'
 
+# Pull education data
+# -- Table B15001
+education <- acs.fetch(endyear = 2015, span = 5, geography = geo,
+                    table.number = "B15001", col.names = "pretty")
+
+# convert to a data.frame for merging
+education_df <- data.frame(paste0(str_pad(education@geography$state, 2, "left", pad="0"), 
+                               str_pad(education@geography$county, 3, "left", pad="0")), 
+                        education@estimate, 
+                        stringsAsFactors = FALSE)
+names(education_df)[1] <- 'geoid'
+
 # Pull employment data
 # -- Table B23001
 employment <- acs.fetch(endyear = 2015, span = 5, geography = geo,
@@ -182,7 +194,14 @@ occupation_df <- data.frame(paste0(str_pad(occupation@geography$state, 2, "left"
 names(occupation_df)[1] <- 'geoid'
 
 # Merge all demographic data together
-demographic.total <- left_join(race_df, left_join(income_df, left_join(employment_df, occupation_df)))
+demographic.total <- left_join(race_df, 
+                               left_join(education_df, 
+                                         left_join(income_df, 
+                                                   left_join(employment_df, 
+                                                             occupation_df)
+                                                   )
+                                         )
+                               )
 
 ```
 
