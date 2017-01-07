@@ -2,8 +2,10 @@
 
 export(loadAlaska)
 export(loadArizona)
+export(loadCalifornia)
 import(dplyr)
 import(tidyr)
+importFrom(openxlsx,read.xlsx)
 importFrom(readr,read_delim)
 importFrom(readr,read_lines)
 importFrom(rgdal,readOGR)
