@@ -67,7 +67,8 @@ loadAlaska <- function() {
     mutate(County=paste0('02', County)) %>%
     select(-Precinct) %>%
     group_by(County) %>%
-    summarize_each(funs(sum(., na.rm=TRUE)))
+    summarize_each(funs(sum(., na.rm=TRUE))) %>%
+    ungroup()
 
   df
 
