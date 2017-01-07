@@ -4,6 +4,7 @@ dfs <- list(
   voterregus::loadAlaska(),
   voterregus::loadArizona(),
   voterregus::loadCalifornia(),
+  voterregus::loadColorado(),
   voterregus::loadConnecticut()
 )
 

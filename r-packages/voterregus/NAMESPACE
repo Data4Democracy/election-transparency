@@ -3,6 +3,7 @@
 export(loadAlaska)
 export(loadArizona)
 export(loadCalifornia)
+export(loadColorado)
 export(loadConnecticut)
 import(dplyr)
 import(tidyr)
