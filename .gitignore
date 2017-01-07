@@ -87,3 +87,9 @@ ENV/
 
 # Rope project settings
 .ropeproject
+r-packages/voterregus/.Rproj.user
+tl_2014_us_county.zip
+2013-SW-Precinct-Proc-Plan.zip
+r-packages/voterregus/data-raw/ak/2013-SW-Proc-Shape-files
+.Rproj.user
+r-packages/voterregus/data-raw/tl_2014_us_county
