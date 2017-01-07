@@ -1,7 +1,8 @@
 # Script to export dataframe to package
 
 dfs <- list(
-  voterregus::loadAlaska()
+  voterregus::loadAlaska(),
+  voterregus::loadArizona()
 )
 
 PartyRegistration <- dplyr::select(dplyr::mutate(dplyr::bind_rows(dfs), State=substr(County, 1, 2)), State, County, D, G, L, N, O, R)
