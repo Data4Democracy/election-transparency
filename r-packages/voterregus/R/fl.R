@@ -20,7 +20,7 @@ loadFlorida <- function() {
     mutate_each("as.integer", -CountyName) %>%
     as_tibble() %>%
     filter(CountyName != 'TOTAL') %>%
-    left_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
+    inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
     select(-CountyName)
 
   df
