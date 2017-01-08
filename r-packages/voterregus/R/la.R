@@ -27,7 +27,8 @@ loadLouisiana <- function() {
     mutate(CountyName=gsub(x=CountyName, pattern="([A-Z]+) PAR.+", replacement="\\1")) %>%
     mutate_each(funs(gsub(x=., pattern=",", replacement=""))) %>%
     mutate_each("as.integer", -CountyName) %>%
-    left_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
+    mutate(CountyName=gsub(x=CountyName, pattern="[^A-Z\\.]", replacement=" ")) %>% # some weird character used for a space in LA source file
+    inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
     select(-CountyName) %>%
     as_tibble()
 
