@@ -17,7 +17,7 @@
 #' Note:  Not all states capture No Party or Unaffiliated separately.  If these
 #' are reported separately for a state, they are combined in the N variable.
 #'
-#' @format A data frame with 741 rows and 8 variables:
+#' @format A data frame with 803 rows and 8 variables:
 #' \describe{
 #'  \item{State}{2-character FIPS code for the state}
 #'  \item{County}{2-character FIPS code for the county}
