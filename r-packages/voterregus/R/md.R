@@ -18,7 +18,7 @@ loadMaryland <- function() {
     select(CountyName, D, R, G, L, N, O) %>%
     mutate_each(funs(gsub(x=., pattern=",", replacement=""))) %>%
     mutate_each("as.integer", -CountyName) %>%
-    left_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
+    inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
     select(-CountyName)
 
   df
