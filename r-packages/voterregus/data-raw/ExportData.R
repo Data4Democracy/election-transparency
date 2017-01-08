@@ -11,7 +11,8 @@ dfs <- list(
   voterregus::loadFlorida(),
   voterregus::loadIowa(),
   voterregus::loadKansas(),
-  voterregus::loadLouisiana()
+  voterregus::loadLouisiana(),
+  voterregus::loadMaine()
 )
 
 PartyRegistration <- dplyr::select(dplyr::mutate(dplyr::bind_rows(dfs), State=substr(County, 1, 2)), State, County, D, G, L, N, O, R)
