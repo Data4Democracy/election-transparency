@@ -7,7 +7,7 @@ Authors@R: person("Scott", "Came", email = "scottcame10@gmail.com",
                   role = c("aut", "cre"))
 Description: Provides data on US voter registration
 License: GNU General Public License version 3 (GPL-3.0)
-Suggests:
+Imports:
   dplyr,
   tidyr,
   rvest,

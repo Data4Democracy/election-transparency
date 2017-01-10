@@ -93,3 +93,4 @@ tl_2014_us_county.zip
 r-packages/voterregus/data-raw/ak/2013-SW-Proc-Shape-files
 .Rproj.user
 r-packages/voterregus/data-raw/tl_2014_us_county
+.RData
