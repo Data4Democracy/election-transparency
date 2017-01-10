@@ -1,7 +1,7 @@
 Overview
 --------
 
-The voterregus (Voter Reg(istration) US) provides functionality for loading information about...voter registration in the
+The voterregus (Voter Reg(istration) US) package provides functionality for loading information about...voter registration in the
 United States.  The initial goal is to provide data on registration in states that allow party affiliation as close to the
 time of the 2016 general election as data are available.  We will iterate on this initial goal to include historical data
 and also data from states that do not support party affiliation.
