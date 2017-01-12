@@ -1,5 +1,9 @@
 # Script to export dataframe to package
 
+library(dplyr)
+library(readr)
+library(rgdal)
+
 dfs <- list(
   voterregus::loadAlaska(),
   voterregus::loadArizona(),
@@ -31,5 +35,21 @@ dfs <- list(
   voterregus::loadWyoming()
 )
 
-PartyRegistration <- dplyr::select(dplyr::mutate(dplyr::bind_rows(dfs), State=substr(County, 1, 2)), State, County, D, G, L, N, O, R)
+PartyRegistration <- select(mutate(bind_rows(dfs), State=substr(County, 1, 2)), State, County, D, G, L, N, O, R)
+
+df <- PartyRegistration %>%
+  mutate_each(funs(replace(., which(is.na(.)), 0))) %>%
+  mutate(Total=D+G+L+N+O+R, dPct=D/Total, rPct=R/Total, leanD=D/R, leanR=R/D, unaffiliatedPct=N/Total, otherPct=O/Total) %>%
+  select(-D, -G, -L, -N, -O, -R, -State)
+
+PartyRegistration <- PartyRegistration %>% inner_join(df, by=c("County"="County"))
+
+countyData <- readOGR("data-raw/tl_2014_us_county/", "tl_2014_us_county")@data %>% select(STATEFP, GEOID, NAME) %>%
+  mutate_each("as.character") %>%
+  inner_join(read_csv("data-raw/States.txt", col_names=FALSE), by=c("STATEFP"="X2")) %>%
+  select(CountyName=NAME, StateName=X1, StateAbbr=X3, County=GEOID)
+
+PartyRegistration <- PartyRegistration %>%
+  inner_join(countyData, by=c("County"="County"))
+
 devtools::use_data(PartyRegistration, overwrite=TRUE)
