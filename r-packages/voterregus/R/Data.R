@@ -20,12 +20,24 @@
 #' @format A data frame with 1,231 rows and 8 variables:
 #' \describe{
 #'  \item{State}{2-character FIPS code for the state}
+#'  \item{StateAbbr}{2-character abbreviation for the state}
+#'  \item{StateName}{Name of the state}
 #'  \item{County}{2-character FIPS code for the county}
+#'  \item{CountyName}{Name of the county}
 #'  \item{D}{Democratic Party registration}
 #'  \item{G}{Green Party registration}
 #'  \item{L}{Libertarian Party registration}
 #'  \item{N}{No Party / Unaffiliated registration}
 #'  \item{O}{Other party registration}
 #'  \item{R}{Republican Party registration}
+#'  \item{Total}{Total registration}
+#'  \item{dPct}{Percentage Democratic Party Registration (D/Total)}
+#'  \item{rPct}{Percentage Republican Party Registration (R/Total)}
+#'  \item{otherPct}{Percentage Other Party Registration (O/Total)}
+#'  \item{unaffiliatedPct}{Percentage Unaffiliated Registration (N/Total)}
+#'  \item{dDRPct}{Democratic Party Registration as percentage of Democratic plus Republican Registration (D/(D+R))}
+#'  \item{rDRPct}{Republican Party Registration as percentage of Democratic plus Republican Registration (R/(D+R))}
+#'  \item{leanD}{Lean Democractic ratio (D/R)}
+#'  \item{leanR}{Lean Republican ratio (R/D)}
 #' }
 "PartyRegistration"

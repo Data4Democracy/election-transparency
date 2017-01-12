@@ -38,10 +38,9 @@ stateDemocraticRepublicanRegistrationChoropleth <- function(state) {
     )
 
     ret <- ggplot(data=county_shp_df, aes(x=long, y=lat, group=group)) +
-      geom_polygon(aes(fill=rPct)) +
+      geom_polygon(aes(fill=rDRPct)) +
       geom_path(color="grey") +
-      #scale_fill_gradient(low = "#0099F7", high = "#F11712", space = "Lab", na.value = "grey50", guide = "colourbar") +
-      scale_fill_gradient2(low="#0099F7", high="#F11712", midpoint=.5, guide = "colourbar", labels=percent) +
+      scale_fill_gradient2(limits=c(0, 1), low="#0099F7", high="#F11712", midpoint=.5, guide = "colourbar", labels=percent) +
       labs(fill='% GOP', title=paste0("2016 Voter Registration Party Affiliation for ", stateName)) +
       coord_map(projection="mercator") +
       theme_bare

@@ -39,7 +39,8 @@ PartyRegistration <- select(mutate(bind_rows(dfs), State=substr(County, 1, 2)), 
 
 df <- PartyRegistration %>%
   mutate_each(funs(replace(., which(is.na(.)), 0))) %>%
-  mutate(Total=D+G+L+N+O+R, dPct=D/Total, rPct=R/Total, leanD=D/R, leanR=R/D, unaffiliatedPct=N/Total, otherPct=O/Total) %>%
+  mutate(Total=D+G+L+N+O+R, dPct=D/Total, rPct=R/Total, leanD=D/R, leanR=R/D, unaffiliatedPct=N/Total, otherPct=O/Total,
+         dDRPct=D/(D+R), rDRPct=R/(D+R)) %>%
   select(-D, -G, -L, -N, -O, -R, -State)
 
 PartyRegistration <- PartyRegistration %>% inner_join(df, by=c("County"="County"))
@@ -53,3 +54,8 @@ PartyRegistration <- PartyRegistration %>%
   inner_join(countyData, by=c("County"="County"))
 
 devtools::use_data(PartyRegistration, overwrite=TRUE)
+
+rm(PartyRegistration)
+rm(countyData)
+rm(df)
+rm(dfs)
