@@ -4,10 +4,12 @@
 \alias{stateDemocraticRepublicanRegistrationChoropleth}
 \title{Produce a red/blue gradient choropleth of the state}
 \usage{
-stateDemocraticRepublicanRegistrationChoropleth(state)
+stateDemocraticRepublicanRegistrationChoropleth(state, labels = FALSE)
 }
 \arguments{
 \item{state}{the two-letter FIPS abbrevation for the state}
+
+\item{labels}{whether to draw the county names on the map (default is FALSE)}
 }
 \description{
 Produce a red/blue gradient choropleth of the state
