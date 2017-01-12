@@ -1,0 +1,53 @@
+#' Produce a red/blue gradient choropleth of the state
+#' @param state the two-letter FIPS abbrevation for the state
+#' @import dplyr
+#' @import ggplot2
+#' @import ggthemes
+#' @import scales
+#' @export
+stateDemocraticRepublicanRegistrationChoropleth <- function(state) {
+
+  df <- PartyRegistration %>% filter(StateAbbr==state)
+
+  ret <- NULL
+
+  if (nrow(df) > 0) {
+
+    stateFIPS <- df[1, 'State'] %>% unlist()
+    stateName <- df[1, 'StateName'] %>% unlist()
+    county_shp = readOGR("/opt/data/Shapefiles/tl_2014_us_county/", "tl_2014_us_county") %>% subset(STATEFP == stateFIPS)
+    county_shp@data$id <- rownames(county_shp@data)
+    county_shp_df <- fortify(county_shp)%>%
+      inner_join(county_shp@data, by=c("id"="id")) %>%
+      mutate(GEOID=as.character(GEOID))  %>%
+      inner_join(df, by=c("GEOID"="County"))
+
+    theme_bare <- theme(
+      axis.line = element_blank(),
+      axis.text.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks = element_blank(),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      panel.background = element_blank(),
+      panel.border = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.margin = unit(c(0,0,0,0), "lines"),
+      plot.margin = unit(c(0,0,0,0), "lines")
+    )
+
+    ret <- ggplot(data=county_shp_df, aes(x=long, y=lat, group=group)) +
+      geom_polygon(aes(fill=rPct)) +
+      geom_path(color="grey") +
+      #scale_fill_gradient(low = "#0099F7", high = "#F11712", space = "Lab", na.value = "grey50", guide = "colourbar") +
+      scale_fill_gradient2(low="#0099F7", high="#F11712", midpoint=.5, guide = "colourbar", labels=percent) +
+      labs(fill='% GOP', title=paste0("2016 Voter Registration Party Affiliation for ", stateName)) +
+      coord_map(projection="mercator") +
+      theme_bare
+
+  }
+
+  ret
+
+}
