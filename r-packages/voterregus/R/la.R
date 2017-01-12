@@ -1,5 +1,5 @@
 #' @importFrom tibble as_tibble
-#' @importFrom openxlsx read.xlsx
+#' @importFrom openxlsx read.xlsx getSheetNames
 #' @import dplyr
 #' @export
 loadLouisiana <- function() {
