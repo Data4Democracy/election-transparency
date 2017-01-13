@@ -3,7 +3,6 @@
 #' @param labels whether to draw the county names on the map (default is FALSE)
 #' @import dplyr
 #' @import ggplot2
-#' @import ggthemes
 #' @import scales
 #' @export
 stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE) {
