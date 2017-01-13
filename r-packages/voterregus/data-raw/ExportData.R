@@ -47,6 +47,7 @@ PartyRegistration <- PartyRegistration %>% inner_join(df, by=c("County"="County"
 
 countyData <- readOGR("data-raw/tl_2014_us_county/", "tl_2014_us_county")@data %>% select(STATEFP, GEOID, NAME) %>%
   mutate_each("as.character") %>%
+  mutate(NAME=recode(GEOID, "24510"="Baltimore City", "24005"="Baltimore County", .default=NAME)) %>%
   inner_join(read_csv("data-raw/States.txt", col_names=FALSE), by=c("STATEFP"="X2")) %>%
   select(CountyName=NAME, StateName=X1, StateAbbr=X3, County=GEOID)
 

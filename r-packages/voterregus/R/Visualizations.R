@@ -23,7 +23,9 @@ stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE)
       inner_join(df, by=c("GEOID"="County"))
 
     labelDf <- county_shp@data %>%
-      mutate(INTPTLON=as.numeric(as.character(INTPTLON)), INTPTLAT=as.numeric(as.character(INTPTLAT)))
+      mutate(INTPTLON=as.numeric(as.character(INTPTLON)), INTPTLAT=as.numeric(as.character(INTPTLAT))) %>%
+      mutate(NAME=as.character(NAME), GEOID=as.character(GEOID)) %>%
+      mutate(NAME=recode(GEOID, "24510"="Baltimore City", "24005"="Baltimore County", .default=NAME))
 
     theme_bare <- theme(
       axis.line = element_blank(),
