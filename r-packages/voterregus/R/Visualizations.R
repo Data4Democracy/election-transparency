@@ -4,6 +4,8 @@
 #' @import dplyr
 #' @import ggplot2
 #' @import scales
+#' @importFrom rgeos gIntersection
+#' @import sp
 #' @export
 stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE) {
 
@@ -15,7 +17,13 @@ stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE)
 
     stateFIPS <- df[1, 'State'] %>% unlist()
     stateName <- df[1, 'StateName'] %>% unlist()
-    county_shp = readOGR("/opt/data/Shapefiles/tl_2014_us_county/", "tl_2014_us_county") %>% subset(STATEFP == stateFIPS)
+
+    county_shp = readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county") %>% subset(STATEFP == stateFIPS)
+    county_shp_data <- county_shp@data
+    state_shp = readOGR("data-raw/cb_2015_us_state_500k/", "cb_2015_us_state_500k") %>% subset(STATEFP == stateFIPS)
+    county_shp <- gIntersection(state_shp, county_shp, byid=TRUE, id=rownames(county_shp_data))
+    county_shp <- sp::SpatialPolygonsDataFrame(county_shp, county_shp_data)
+
     county_shp@data$id <- rownames(county_shp@data)
     county_shp_df <- fortify(county_shp) %>%
       inner_join(county_shp@data, by=c("id"="id")) %>%
