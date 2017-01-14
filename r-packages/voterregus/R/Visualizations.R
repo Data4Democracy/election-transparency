@@ -21,7 +21,8 @@ stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE)
     county_shp = readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county") %>% subset(STATEFP == stateFIPS)
     county_shp_data <- county_shp@data
     state_shp = readOGR("data-raw/cb_2015_us_state_500k/", "cb_2015_us_state_500k") %>% subset(STATEFP == stateFIPS)
-    county_shp <- gSimplify(county_shp, .01)
+    tolerance <- ifelse(state == 'NJ', .0001, .01)
+    county_shp <- gSimplify(county_shp, tolerance)
     county_shp <- gIntersection(state_shp, county_shp, byid=TRUE, id=rownames(county_shp_data))
     county_shp <- sp::SpatialPolygonsDataFrame(county_shp, county_shp_data)
 
