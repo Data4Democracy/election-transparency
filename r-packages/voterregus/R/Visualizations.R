@@ -46,8 +46,11 @@ stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE)
       panel.border = element_blank(),
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
-      panel.margin = unit(c(0,0,0,0), "lines"),
-      plot.margin = unit(c(0,0,0,0), "lines")
+      plot.title = element_text(hjust = 0.5),
+      plot.caption = element_text(hjust = 0.5),
+      legend.position = "bottom",
+      legend.key.width = unit(2, "cm"),
+      plot.margin = unit(c(0,1,0,0), "lines")
     )
 
     ret <- ggplot(data=county_shp_df, aes(x=long, y=lat, group=group)) +
@@ -60,11 +63,11 @@ stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE)
 
     ret <- ret +
       scale_fill_gradient2(limits=c(0, 1),
-                           breaks=c(0, .25, .5, .75, 1), labels=c('100%', '75%', 'Even', '75%', '100%'),
+                           breaks=c(0, .25, .5, .75, 1), labels=c('Dem 100%', '75%', 'Even', '75%', '100% Rep'),
                            low="#0099F7", high="#F11712", midpoint=.5, guide = "colourbar") +
-      labs(fill='', title=paste0("2016 Voter Registration Party Affiliation for ", stateName)) +
-      coord_map(projection="mercator") +
-      theme_bare
+      labs(fill='', title=paste0("2016 Voter Registration Party Affiliation for ", stateName),
+           caption='Percent of voters registered as Republican (Red) versus Democratic (Blue) among voters affiliated with those two parties') +
+      coord_map(projection="mercator") + theme_bare
 
   }
 
