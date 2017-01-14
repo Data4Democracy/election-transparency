@@ -59,8 +59,10 @@ stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE)
     }
 
     ret <- ret +
-      scale_fill_gradient2(limits=c(0, 1), low="#0099F7", high="#F11712", midpoint=.5, guide = "colourbar", labels=percent) +
-      labs(fill='% GOP', title=paste0("2016 Voter Registration Party Affiliation for ", stateName)) +
+      scale_fill_gradient2(limits=c(0, 1),
+                           breaks=c(0, .25, .5, .75, 1), labels=c('100%', '75%', 'Even', '75%', '100%'),
+                           low="#0099F7", high="#F11712", midpoint=.5, guide = "colourbar") +
+      labs(fill='', title=paste0("2016 Voter Registration Party Affiliation for ", stateName)) +
       coord_map(projection="mercator") +
       theme_bare
 
