@@ -2,7 +2,8 @@
 % Please edit documentation in R/Visualizations.R
 \name{stateDemocraticRepublicanRegistrationChoropleth}
 \alias{stateDemocraticRepublicanRegistrationChoropleth}
-\title{Produce a red/blue gradient choropleth of the state}
+\title{Produce a red/blue gradient choropleth of the state based on the percentage of republican (red)
+versus democratic (blue) registered voters in each county}
 \usage{
 stateDemocraticRepublicanRegistrationChoropleth(state, labels = FALSE)
 }
@@ -12,6 +13,7 @@ stateDemocraticRepublicanRegistrationChoropleth(state, labels = FALSE)
 \item{labels}{whether to draw the county names on the map (default is FALSE)}
 }
 \description{
-Produce a red/blue gradient choropleth of the state
+Produce a red/blue gradient choropleth of the state based on the percentage of republican (red)
+versus democratic (blue) registered voters in each county
 }
 

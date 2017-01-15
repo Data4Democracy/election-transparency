@@ -1,22 +1,44 @@
+#' Produce a red/blue gradient choropleth of the state based on the percentage of republican (red)
+#' versus democratic (blue) registered voters in each county
+#' @param state the two-letter FIPS abbrevation for the state
+#' @param labels whether to draw the county names on the map (default is FALSE)
+#' @export
+stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE) {
+  stateDemocraticRepublicanChoropleth(PartyRegistration, state, labels, RDRatioColumnName='rDRPct',
+                                      caption='Percent of voters registered as Republican (Red) versus Democratic (Blue) among voters affiliated with those two parties',
+                                      titleFunction=function(stateName) {
+                                        paste0("2016 Voter Registration Party Affiliation for ", stateName)
+                                      })
+}
+
 #' Produce a red/blue gradient choropleth of the state
 #' @param state the two-letter FIPS abbrevation for the state
 #' @param labels whether to draw the county names on the map (default is FALSE)
+#' @param stateFIPSColumnName the name of the column in the provided data frame that contains the numeric FIPS code for the state (default=State)
+#' @param stateNameColumnName the name of the column in the provided data frame that contains the full state name (default=StateName)
+#' @param caption a string containing the caption for the map (default is an empty string / no caption)
+#' @param titleFunction a function, taking the name of the state as a parameter, that returns the string for the title (default is empty string / no title)
+#' @param RDRatioColumnName the name of the column in the provided data frame that contains the ratio (R/(D+R)) to be displayed on the choropleth
 #' @import dplyr
 #' @import ggplot2
 #' @import scales
 #' @importFrom rgeos gIntersection
 #' @import sp
 #' @export
-stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE) {
+stateDemocraticRepublicanChoropleth <- function(countyLevelDf, state, labels=FALSE,
+                                                stateFIPSColumnName='State', stateNameColumnName='StateName',
+                                                caption='',
+                                                titleFunction=function(stateName) {''},
+                                                RDRatioColumnName) {
 
-  df <- PartyRegistration %>% filter(StateAbbr==state)
+  df <- countyLevelDf %>% filter(StateAbbr==state)
 
   ret <- NULL
 
   if (nrow(df) > 0) {
 
-    stateFIPS <- df[1, 'State'] %>% unlist()
-    stateName <- df[1, 'StateName'] %>% unlist()
+    stateFIPS <- df[1, stateFIPSColumnName] %>% unlist()
+    stateName <- df[1, stateNameColumnName] %>% unlist()
 
     county_shp = readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county") %>% subset(STATEFP == stateFIPS)
     county_shp_data <- county_shp@data
@@ -58,19 +80,20 @@ stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE)
     )
 
     ret <- ggplot(data=county_shp_df, aes(x=long, y=lat, group=group)) +
-      geom_polygon(aes(fill=rDRPct)) +
+      geom_polygon(aes_string(fill=RDRatioColumnName)) +
       geom_path(color="grey")
 
     if (labels) {
       ret <- ret + geom_text(data=labelDf, aes(x=INTPTLON, y=INTPTLAT, label=NAME, group=NAME), size=3.5)
     }
 
+    titleString <- do.call(titleFunction, list(stateName))
+
     ret <- ret +
       scale_fill_gradient2(limits=c(0, 1),
                            breaks=c(0, .25, .5, .75, 1), labels=c('Dem 100%', '75%', 'Even', '75%', '100% Rep'),
                            low="#0099F7", high="#F11712", midpoint=.5, guide = "colourbar") +
-      labs(fill='', title=paste0("2016 Voter Registration Party Affiliation for ", stateName),
-           caption='Percent of voters registered as Republican (Red) versus Democratic (Blue) among voters affiliated with those two parties') +
+      labs(fill='', title=titleString, caption=caption) +
       coord_map(projection="mercator") + theme_bare
 
   }
