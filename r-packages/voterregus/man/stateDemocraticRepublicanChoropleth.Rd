@@ -6,6 +6,7 @@
 \usage{
 stateDemocraticRepublicanChoropleth(countyLevelDf, state, labels = FALSE,
   stateFIPSColumnName = "State", stateNameColumnName = "StateName",
+  stateAbbrColumnName = "StateAbbr", countyFIPSColumnName = "County",
   caption = "", titleFunction = function(stateName) {     "" },
   RDRatioColumnName)
 }
@@ -17,6 +18,8 @@ stateDemocraticRepublicanChoropleth(countyLevelDf, state, labels = FALSE,
 \item{stateFIPSColumnName}{the name of the column in the provided data frame that contains the numeric FIPS code for the state (default=State)}
 
 \item{stateNameColumnName}{the name of the column in the provided data frame that contains the full state name (default=StateName)}
+
+\item{countyFIPSColumnName}{the name of the column in the provided data frame that contains the 5-digit FIPS code for each county (default=County)}
 
 \item{caption}{a string containing the caption for the map (default is an empty string / no caption)}
 

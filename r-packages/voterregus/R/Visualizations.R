@@ -11,15 +11,35 @@ stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE)
                                       })
 }
 
+#' Produce a red/blue gradient choropleth of the state based upon the percentage of Trump vs Clinton votes
+#' NOTE:  We really need to refactor the voterregus package somehow, as this does not deal with registration data...
+#' @import dplyr
+#' @importFrom readr read_csv
+#' @export
+stateDemocraticRepublican2016ResultsChoropleth <- function(state, labels=FALSE) {
+  read_csv("https://query.data.world/s/azqvr6a474h5w5u7qq5jw8xut") %>%
+    mutate(tCTPct=trump/(clinton+trump)) %>%
+    select(fips_fixed, state, tCTPct) %>%
+    inner_join(read_csv("data-raw/States.txt", col_names=FALSE), by=c("state"="X3")) %>%
+    select(StateAbbr=state, County=fips_fixed, StateName=X1, State=X2, tCTPct) %>%
+    stateDemocraticRepublicanChoropleth(state, labels, RDRatioColumnName='tCTPct',
+      caption='Percent of votes for Republican candidate (Red) versus Democratic candidate (Blue) (excluding third-party and write-in votes)',
+      titleFunction=function(stateName) {
+      paste0("2016 Presidential Election Results for ", stateName)
+    })
+}
+
 #' Produce a red/blue gradient choropleth of the state
 #' @param state the two-letter FIPS abbrevation for the state
 #' @param labels whether to draw the county names on the map (default is FALSE)
 #' @param stateFIPSColumnName the name of the column in the provided data frame that contains the numeric FIPS code for the state (default=State)
 #' @param stateNameColumnName the name of the column in the provided data frame that contains the full state name (default=StateName)
+#' @param countyFIPSColumnName the name of the column in the provided data frame that contains the 5-digit FIPS code for each county (default=County)
 #' @param caption a string containing the caption for the map (default is an empty string / no caption)
 #' @param titleFunction a function, taking the name of the state as a parameter, that returns the string for the title (default is empty string / no title)
 #' @param RDRatioColumnName the name of the column in the provided data frame that contains the ratio (R/(D+R)) to be displayed on the choropleth
 #' @import dplyr
+#' @import tibble
 #' @import ggplot2
 #' @import scales
 #' @importFrom rgeos gIntersection
@@ -27,12 +47,12 @@ stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE)
 #' @export
 stateDemocraticRepublicanChoropleth <- function(countyLevelDf, state, labels=FALSE,
                                                 stateFIPSColumnName='State', stateNameColumnName='StateName',
+                                                stateAbbrColumnName='StateAbbr', countyFIPSColumnName='County',
                                                 caption='',
                                                 titleFunction=function(stateName) {''},
                                                 RDRatioColumnName) {
 
-  df <- countyLevelDf %>% filter(StateAbbr==state)
-
+  df <- countyLevelDf %>% filter_(.dots=paste0(stateAbbrColumnName, "=='", state, "'"))
   ret <- NULL
 
   if (nrow(df) > 0) {
@@ -43,8 +63,8 @@ stateDemocraticRepublicanChoropleth <- function(countyLevelDf, state, labels=FAL
     county_shp = readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county") %>% subset(STATEFP == stateFIPS)
     county_shp_data <- county_shp@data
     state_shp = readOGR("data-raw/cb_2015_us_state_500k/", "cb_2015_us_state_500k") %>% subset(STATEFP == stateFIPS)
-    if (state != 'CO') {
-      tolerance <- ifelse(state == 'NJ', .0001, .01)
+    if (!(state %in% c('CO'))) {
+      tolerance <- ifelse(state %in% c('NJ', 'GA'), .0001, ifelse(state=='AK', .0125, .01))
       county_shp <- gSimplify(county_shp, tolerance)
     }
     county_shp <- gIntersection(state_shp, county_shp, byid=TRUE, id=rownames(county_shp_data))
@@ -54,7 +74,7 @@ stateDemocraticRepublicanChoropleth <- function(countyLevelDf, state, labels=FAL
     county_shp_df <- fortify(county_shp) %>%
       inner_join(county_shp@data, by=c("id"="id")) %>%
       mutate(GEOID=as.character(GEOID))  %>%
-      inner_join(df, by=c("GEOID"="County"))
+      inner_join(df, by=c("GEOID"=countyFIPSColumnName))
 
     labelDf <- county_shp@data %>%
       mutate(INTPTLON=as.numeric(as.character(INTPTLON)), INTPTLAT=as.numeric(as.character(INTPTLAT))) %>%
@@ -78,6 +98,10 @@ stateDemocraticRepublicanChoropleth <- function(countyLevelDf, state, labels=FAL
       legend.key.width = unit(2, "cm"),
       plot.margin = unit(c(0,1,0,0), "lines")
     )
+
+    # adjustment for Alaska (and would work on any state that stradles 180* of longitude...)
+    county_shp_df <- county_shp_df %>%
+      mutate(long=ifelse(long > 0, -180 - (180-long), long))
 
     ret <- ggplot(data=county_shp_df, aes(x=long, y=lat, group=group)) +
       geom_polygon(aes_string(fill=RDRatioColumnName)) +
