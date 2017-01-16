@@ -3,7 +3,7 @@
 getCountyNameFIPSMapping <- function(StateFIPSCode) {
 
   if (!exists("countyData", env=packageEnv)) {
-    assign("countyData", readOGR("data-raw/tl_2014_us_county/", "tl_2014_us_county")@data, env=packageEnv)
+    assign("countyData", readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county")@data, env=packageEnv)
   }
 
   get("countyData", env=packageEnv) %>%

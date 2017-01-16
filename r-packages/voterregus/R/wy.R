@@ -12,7 +12,9 @@ loadWyoming <- function() {
     select(CountyName, R, D, G, L, N, O) %>%
     filter(CountyName != 'TOTAL') %>%
     mutate_each("as.integer", -CountyName) %>%
-    inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>% select(-CountyName)
+    inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
+    select(-CountyName) %>%
+    mutate(Year = 2016, Month = 11) # Hardcode until we add historical data
 
   df
 

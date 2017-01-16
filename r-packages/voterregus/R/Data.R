@@ -39,5 +39,7 @@
 #'  \item{rDRPct}{Republican Party Registration as percentage of Democratic plus Republican Registration (R/(D+R))}
 #'  \item{leanD}{Lean Democractic ratio (D/R)}
 #'  \item{leanR}{Lean Republican ratio (R/D)}
+#'  \item{Year}{Year of Reporting}
+#'  \item{Month}{Month of Reporting}
 #' }
 "PartyRegistration"

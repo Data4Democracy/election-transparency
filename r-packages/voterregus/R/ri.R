@@ -64,7 +64,8 @@ loadRhodeIsland <- function() {
     group_by(County) %>%
     summarize_each(funs(sum(., na.rm=TRUE))) %>%
     mutate(G=as.integer(NA), L=as.integer(NA)) %>%
-    ungroup()
+    ungroup() %>%
+    mutate(Year = 2016, Month = 10) # Hardcode until we add historical data
 
   df
 

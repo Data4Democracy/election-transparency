@@ -35,7 +35,8 @@ dfs <- list(
   voterregus::loadWyoming()
 )
 
-PartyRegistration <- select(mutate(bind_rows(dfs), State=substr(County, 1, 2)), State, County, D, G, L, N, O, R)
+
+PartyRegistration <- select(mutate(bind_rows(dfs), State=substr(County, 1, 2)), State, County, Year, Month, D, G, L, N, O, R)
 
 df <- PartyRegistration %>%
   mutate_each(funs(replace(., which(is.na(.)), 0))) %>%
@@ -43,9 +44,9 @@ df <- PartyRegistration %>%
          dDRPct=D/(D+R), rDRPct=R/(D+R)) %>%
   select(-D, -G, -L, -N, -O, -R, -State)
 
-PartyRegistration <- PartyRegistration %>% inner_join(df, by=c("County"="County"))
+PartyRegistration <- PartyRegistration %>% inner_join(df, by=c("County"="County", "Year"="Year", "Month"="Month"))
 
-countyData <- readOGR("data-raw/tl_2014_us_county/", "tl_2014_us_county")@data %>% select(STATEFP, GEOID, NAME) %>%
+countyData <- readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county")@data %>% select(STATEFP, GEOID, NAME) %>%
   mutate_each("as.character") %>%
   mutate(NAME=recode(GEOID, "24510"="Baltimore City", "24005"="Baltimore County", .default=NAME)) %>%
   inner_join(read_csv("data-raw/States.txt", col_names=FALSE), by=c("STATEFP"="X2")) %>%

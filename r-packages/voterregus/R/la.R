@@ -30,6 +30,7 @@ loadLouisiana <- function() {
     mutate(CountyName=gsub(x=CountyName, pattern="[^A-Z\\.]", replacement=" ")) %>% # some weird character used for a space in LA source file
     inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
     select(-CountyName) %>%
+    mutate(Year = 2016, Month = 11) %>% # Hardcode until we add historical data
     as_tibble()
 
   df

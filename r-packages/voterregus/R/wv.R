@@ -21,7 +21,9 @@ loadWestVirginia <- function() {
     mutate(O=O+X4) %>%
     select(-X4) %>%
     as_tibble() %>%
-    inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>% select(-CountyName)
+    inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
+    select(-CountyName) %>%
+    mutate(Year = 2016, Month = 11) # Hardcode until we add historical data
 
   df
 
