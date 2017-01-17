@@ -98,3 +98,5 @@ r-packages/voterregus/data-raw/tl_2016_us_county
 r-packages/voterregus/data-raw/cb_2015_us_state_500k
 tl_2016_us_county.zip
 cb_2015_us_state_500k.zip
+PartyRegistration2016.csv
+PresidentialElectionResults2016.csv
