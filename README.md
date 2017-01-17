@@ -1,1 +1,1 @@
-# voter-fraud
+# README for the Election Transparency repo
