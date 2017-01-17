@@ -4,7 +4,7 @@
 #' @param labels whether to draw the county names on the map (default is FALSE)
 #' @export
 stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE) {
-  stateDemocraticRepublicanChoropleth(PartyRegistration, state, labels, RDRatioColumnName='rDRPct',
+  stateDemocraticRepublicanChoropleth(PartyRegistration2016, state, labels, RDRatioColumnName='rDRPct',
                                       caption='Percent of voters registered as Republican (Red) versus Democratic (Blue) among voters affiliated with those two parties',
                                       titleFunction=function(stateName) {
                                         paste0("2016 Voter Registration Party Affiliation for ", stateName)
@@ -17,12 +17,7 @@ stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE)
 #' @importFrom readr read_csv
 #' @export
 stateDemocraticRepublican2016ResultsChoropleth <- function(state, labels=FALSE) {
-  read_csv("https://query.data.world/s/azqvr6a474h5w5u7qq5jw8xut") %>%
-    mutate(tCTPct=trump/(clinton+trump)) %>%
-    select(fips_fixed, state, tCTPct) %>%
-    inner_join(read_csv("data-raw/States.txt", col_names=FALSE), by=c("state"="X3")) %>%
-    select(StateAbbr=state, County=fips_fixed, StateName=X1, State=X2, tCTPct) %>%
-    stateDemocraticRepublicanChoropleth(state, labels, RDRatioColumnName='tCTPct',
+    stateDemocraticRepublicanChoropleth(PresidentialElectionResults2016, state, labels, RDRatioColumnName='rDRPct',
       caption='Percent of votes for Republican candidate (Red) versus Democratic candidate (Blue) (excluding third-party and write-in votes)',
       titleFunction=function(stateName) {
       paste0("2016 Presidential Election Results for ", stateName)
@@ -42,7 +37,7 @@ stateDemocraticRepublican2016ResultsChoropleth <- function(state, labels=FALSE) 
 #' @import tibble
 #' @import ggplot2
 #' @import scales
-#' @importFrom rgeos gIntersection
+#' @importFrom rgeos gIntersection gSimplify
 #' @import sp
 #' @export
 stateDemocraticRepublicanChoropleth <- function(countyLevelDf, state, labels=FALSE,
@@ -79,7 +74,8 @@ stateDemocraticRepublicanChoropleth <- function(countyLevelDf, state, labels=FAL
     labelDf <- county_shp@data %>%
       mutate(INTPTLON=as.numeric(as.character(INTPTLON)), INTPTLAT=as.numeric(as.character(INTPTLAT))) %>%
       mutate(NAME=as.character(NAME), GEOID=as.character(GEOID)) %>%
-      mutate(NAME=recode(GEOID, "24510"="Baltimore City", "24005"="Baltimore County", .default=NAME))
+      mutate(NAME=recode(GEOID, "24510"="Baltimore City", "24005"="Baltimore County", .default=NAME)) %>%
+      mutate(NAME=recode(GEOID, "29510"="St. Louis City", "29189"="St. Louis County", .default=NAME))
 
     theme_bare <- theme(
       axis.line = element_blank(),
