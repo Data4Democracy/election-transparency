@@ -35,7 +35,8 @@ dfs <- list(
   voterregus::loadWyoming()
 )
 
-PartyRegistration <- select(mutate(bind_rows(dfs), State=substr(County, 1, 2)), State, County, D, G, L, N, O, R)
+
+PartyRegistration <- select(mutate(bind_rows(dfs), State=substr(County, 1, 2)), State, County, Year, Month, D, G, L, N, O, R)
 
 df <- PartyRegistration %>%
   mutate_each(funs(replace(., which(is.na(.)), 0))) %>%
@@ -43,7 +44,7 @@ df <- PartyRegistration %>%
          dDRPct=D/(D+R), rDRPct=R/(D+R)) %>%
   select(-D, -G, -L, -N, -O, -R, -State)
 
-PartyRegistration <- PartyRegistration %>% inner_join(df, by=c("County"="County"))
+PartyRegistration <- PartyRegistration %>% inner_join(df, by=c("County"="County", "Year"="Year", "Month"="Month"))
 
 countyData <- readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county")@data %>% select(STATEFP, GEOID, NAME) %>%
   mutate_each("as.character") %>%
@@ -52,7 +53,7 @@ countyData <- readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county")@data %
   inner_join(read_csv("data-raw/States.txt", col_names=FALSE), by=c("STATEFP"="X2")) %>%
   select(CountyName=NAME, StateName=X1, StateAbbr=X3, County=GEOID)
 
-PartyRegistration2016 <- PartyRegistration %>%
+PartyRegistration <- PartyRegistration %>%
   inner_join(countyData, by=c("County"="County"))
 
 PresidentialElectionResults2016 <- load2016PresidentialResults() %>%
@@ -60,11 +61,10 @@ PresidentialElectionResults2016 <- load2016PresidentialResults() %>%
   mutate(dPct=clinton/totalvotes, rPct=trump/totalvotes, leanD=clinton/trump, leanR=trump/clinton, otherPct=other/totalvotes,
          dDRPct=clinton/(clinton+trump), rDRPct=trump/(clinton+trump), State=substr(County, 1, 2))
 
-devtools::use_data(PartyRegistration2016, overwrite=TRUE)
+devtools::use_data(PartyRegistration, overwrite=TRUE)
 devtools::use_data(PresidentialElectionResults2016, overwrite=TRUE)
 
 rm(PartyRegistration)
-rm(PartyRegistration2016)
 rm(PresidentialElectionResults2016)
 rm(countyData)
 rm(df)

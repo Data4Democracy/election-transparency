@@ -18,7 +18,9 @@ loadNorthCarolina <- function() {
     mutate_each("as.integer", -CountyName) %>%
     filter(CountyName != 'Totals') %>%
     as_tibble() %>%
-    inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>% select(-CountyName)
+    inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
+    select(-CountyName) %>%
+    mutate(Year = 2016, Month = 12) # Hardcode until we add historical data
 
   df
 

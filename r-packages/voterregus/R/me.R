@@ -33,6 +33,8 @@ loadMaine <- function() {
   inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
   select(-CountyName) %>%
   mutate(O=as.integer(NA))  %>%
+  mutate(Year = 2016, Month = 11) %>% # Hardcode until we add historical data
   as_tibble()
 
+  df
 }

@@ -12,7 +12,8 @@ loadColorado <- function() {
     mutate_each("as.integer", -CountyName) %>%
     inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
     select(-CountyName) %>%
-    ungroup()
+    ungroup() %>%
+    mutate(Year = 2016, Month = 11) # Hardcode until we add historical data
 
   df
 

@@ -1,8 +1,7 @@
 #' Voter Party Registration Dataset (2016)
 #'
 #' This dataset contains voter registration by county in each political party,
-#' in the 28 states plus DC that allow party registration under state law, at the time closest to the 2016
-#' General Election as source data allow.
+#' in the 28 states plus DC that allow party registration under state law
 #'
 #' The data in this dataset were sourced from state elections websites.  We have a todo
 #' to produce a detailed document listing the data sources.
@@ -18,7 +17,7 @@
 #' Note:  Not all states capture No Party or Unaffiliated separately.  If these
 #' are reported separately for a state, they are combined in the N variable.
 #'
-#' @format A data frame with 1,231 rows and 8 variables:
+#' @format A data frame with 1,306 rows and 22 variables:
 #' \describe{
 #'  \item{State}{2-character FIPS code for the state}
 #'  \item{StateAbbr}{2-character abbreviation for the state}
@@ -40,8 +39,10 @@
 #'  \item{rDRPct}{Republican Party Registration as percentage of Democratic plus Republican Registration (R/(D+R))}
 #'  \item{leanD}{Lean Democractic ratio (D/R)}
 #'  \item{leanR}{Lean Republican ratio (R/D)}
+#'  \item{Year}{Year of Reporting}
+#'  \item{Month}{Month of Reporting}
 #' }
-"PartyRegistration2016"
+"PartyRegistration"
 
 #' Presidential Election Results Dataset (2016)
 #'

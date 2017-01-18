@@ -12,7 +12,8 @@ loadKansas <- function() {
     mutate(G=NA, O=NA) %>%
     mutate_each("as.integer", -CountyName) %>% as_tibble() %>%
     inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
-    select(-CountyName)
+    select(-CountyName) %>%
+    mutate(Year = 2016, Month = 11) # Hardcode until we add historical data
 
   df
 

@@ -56,15 +56,14 @@ loadRhodeIsland <- function() {
     mutate_each("as.integer", -Town) %>%
     inner_join(townCountyMapping, by=c("Town"="Town"))
 
-  writeLines(paste0("Town-County merge for Rhode Island produced ", nrow(df), " rows"))
-
   df <- df %>%
     inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
     select(-Town, -CountyName) %>%
     group_by(County) %>%
     summarize_each(funs(sum(., na.rm=TRUE))) %>%
     mutate(G=as.integer(NA), L=as.integer(NA)) %>%
-    ungroup()
+    ungroup() %>%
+    mutate(Year = 2016, Month = 10) # Hardcode until we add historical data
 
   df
 

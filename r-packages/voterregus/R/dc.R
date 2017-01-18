@@ -7,7 +7,8 @@ loadDC <- function() {
   # Source: https://www.dcboee.org/popup.asp?url=/pdf_files/StatRep_31Dec2016.PDF
 
   df <- data_frame(County="11001", D=366695, R=30086, O=3641+2384, N=79551, G=NA, L=NA) %>%
-    mutate_each("as.integer", -County)
+    mutate_each("as.integer", -County) %>%
+    mutate(Year = 2016, Month = 11) # Hardcode until we add historical data
 
   df
 

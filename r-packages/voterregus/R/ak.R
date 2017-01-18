@@ -27,7 +27,8 @@ loadAlaska <- function() {
     select(-Precinct) %>%
     group_by(County) %>%
     summarize_each(funs(sum(., na.rm=TRUE))) %>%
-    ungroup()
+    ungroup() %>%
+    mutate(Year = 2016, Month = 11) # Hardcode until we add historical data
 
   df
 

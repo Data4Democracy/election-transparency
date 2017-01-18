@@ -14,7 +14,9 @@ loadSouthDakota <- function() {
     mutate_each("as.integer", -CountyName) %>%
     group_by(CountyName) %>%
     summarize_each(funs(sum(., na.rm=TRUE))) %>%
-    inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>% select(-CountyName)
+    inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
+    select(-CountyName) %>%
+    mutate(Year = 2016, Month = 11) # Hardcode until we add historical data
 
   df
 

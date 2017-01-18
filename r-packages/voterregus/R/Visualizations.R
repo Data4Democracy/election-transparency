@@ -2,9 +2,11 @@
 #' versus democratic (blue) registered voters in each county
 #' @param state the two-letter FIPS abbrevation for the state
 #' @param labels whether to draw the county names on the map (default is FALSE)
+#' @import dplyr
 #' @export
 stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE) {
-  stateDemocraticRepublicanChoropleth(PartyRegistration2016, state, labels, RDRatioColumnName='rDRPct',
+  pr <- PartyRegistration %>% filter(Year==2016 & Month==11)
+  stateDemocraticRepublicanChoropleth(pr, state, labels, RDRatioColumnName='rDRPct',
                                       caption='Percent of voters registered as Republican (Red) versus Democratic (Blue) among voters affiliated with those two parties',
                                       titleFunction=function(stateName) {
                                         paste0("2016 Voter Registration Party Affiliation for ", stateName)

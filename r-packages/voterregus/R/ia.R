@@ -11,7 +11,8 @@ loadIowa <- function() {
     mutate(D=X2+X7, R=X3+X8, N=X4+X9, O=X5+X10, G=as.integer(NA), L=as.integer(NA)) %>%
     select(CountyName=X1, D, R, N, O, G, L) %>%
     inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
-    select(-CountyName)
+    select(-CountyName) %>%
+    mutate(Year = 2016, Month = 11) # Hardcode until we add historical data
 
   df
 
