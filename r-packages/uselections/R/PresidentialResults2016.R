@@ -22,12 +22,16 @@ load2016PresidentialResults <- function() {
     select(County, clinton, trump, johnson, stein, other, totalvotes) %>%
     as_tibble() # take out when done
 
-  # Kansas is not in the harvard dataset
-  # Note: Kansas results are partly official (from County websites) and partly unofficial (from counties and from secretary of state's site)
+  # Kansas is not in the harvard dataset.  Loading from spreadsheet converted from SOS PDF obtained from DKE
 
-  ksCountyInfo <- getCountyNameFIPSMapping('20')
-  ks <- read.xlsx("data-raw/ks/Results.xlsx", colNames=TRUE) %>%
-    mutate(otheri=ifelse(is.na(other), 0, other), totalvotes=clinton+johnson+stein+trump+otheri) %>%
+  ksCountyInfo <- getCountyNameFIPSMapping('20') %>%
+    mutate(CountyName=toupper(CountyName))
+
+  ks <- read.xlsx("data-raw/ks/2016 Kansas county-level election results.xlsx", colNames=FALSE, startRow=3) %>%
+    mutate_each(funs(replace(., is.na(.), 0)), -X1) %>%
+    mutate_each("as.integer", -X1) %>%
+    mutate(clinton=X2, stein=X3, johnson=X4, trump=X5, other=X6+X7+X8+X9+X10+X11+X12+X13+X14+X15+X16+X17+X18+X19+X20,
+           totalvotes=clinton+johnson+stein+trump+other, CountyName=trimws(X1)) %>%
     select(CountyName, clinton, trump, johnson, stein, other, totalvotes) %>%
     inner_join(ksCountyInfo, by=c("CountyName"="CountyName")) %>%
     select(-CountyName) %>%
