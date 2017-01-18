@@ -1,4 +1,4 @@
-#' Voter Party Registration Dataset (2016)
+#' Voter Party Registration Dataset
 #'
 #' This dataset contains voter registration by county in each political party,
 #' in the 28 states plus DC that allow party registration under state law

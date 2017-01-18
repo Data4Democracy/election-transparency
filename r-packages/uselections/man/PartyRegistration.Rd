@@ -3,7 +3,7 @@
 \docType{data}
 \name{PartyRegistration}
 \alias{PartyRegistration}
-\title{Voter Party Registration Dataset (2016)}
+\title{Voter Party Registration Dataset}
 \format{A data frame with 1,306 rows and 22 variables:
 \describe{
  \item{State}{2-character FIPS code for the state}

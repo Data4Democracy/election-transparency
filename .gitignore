@@ -87,15 +87,15 @@ ENV/
 
 # Rope project settings
 .ropeproject
-r-packages/voterregus/.Rproj.user
+r-packages/uselections/.Rproj.user
 tl_2014_us_county.zip
 2013-SW-Precinct-Proc-Plan.zip
-r-packages/voterregus/data-raw/ak/2013-SW-Proc-Shape-files
+r-packages/uselections/data-raw/ak/2013-SW-Proc-Shape-files
 .Rproj.user
-r-packages/voterregus/data-raw/tl_2014_us_county
+r-packages/uselections/data-raw/tl_2014_us_county
 .RData
-r-packages/voterregus/data-raw/tl_2016_us_county
-r-packages/voterregus/data-raw/cb_2015_us_state_500k
+r-packages/uselections/data-raw/tl_2016_us_county
+r-packages/uselections/data-raw/cb_2015_us_state_500k
 tl_2016_us_county.zip
 cb_2015_us_state_500k.zip
 PartyRegistration2016.csv

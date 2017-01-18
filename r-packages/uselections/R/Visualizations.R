@@ -14,7 +14,6 @@ stateDemocraticRepublicanRegistrationChoropleth <- function(state, labels=FALSE)
 }
 
 #' Produce a red/blue gradient choropleth of the state based upon the percentage of Trump vs Clinton votes
-#' NOTE:  We really need to refactor the voterregus package somehow, as this does not deal with registration data...
 #' @import dplyr
 #' @importFrom readr read_csv
 #' @export

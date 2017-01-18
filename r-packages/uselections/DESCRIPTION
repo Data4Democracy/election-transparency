@@ -1,11 +1,11 @@
-Package: voterregus
+Package: uselections
 Type: Package
-Title: Provides data on US voter registration
+Title: Provides data on US Elections
 Version: 0.1
 Date: 2017-01-06
 Authors@R: person("Scott", "Came", email = "scottcame10@gmail.com",
                   role = c("aut", "cre"))
-Description: Provides data on US voter registration
+Description: Provides data on US Elections
 License: GNU General Public License version 3 (GPL-3.0)
 Imports:
   dplyr,
@@ -15,6 +15,7 @@ Imports:
   rgeos,
   sp,
   readr,
+  stringr,
   openxlsx,
   ggplot2,
   scales

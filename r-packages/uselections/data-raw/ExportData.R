@@ -5,34 +5,34 @@ library(readr)
 library(rgdal)
 
 dfs <- list(
-  voterregus::loadAlaska(),
-  voterregus::loadArizona(),
-  voterregus::loadCalifornia(),
-  voterregus::loadColorado(),
-  voterregus::loadConnecticut(),
-  voterregus::loadDelaware(),
-  voterregus::loadDC(),
-  voterregus::loadFlorida(),
-  voterregus::loadIowa(),
-  voterregus::loadKansas(),
-  voterregus::loadLouisiana(),
-  voterregus::loadMaine(),
-  voterregus::loadMaryland(),
-  voterregus::loadMassachusetts(),
-  voterregus::loadNebraska(),
-  voterregus::loadNevada(),
-  voterregus::loadNewHampshire(),
-  voterregus::loadNewJersey(),
-  voterregus::loadNewMexico(),
-  voterregus::loadNewYork(),
-  voterregus::loadNorthCarolina(),
-  voterregus::loadOklahoma(),
-  voterregus::loadOregon(),
-  voterregus::loadPennsylvania(),
-  voterregus::loadRhodeIsland(),
-  voterregus::loadSouthDakota(),
-  voterregus::loadWestVirginia(),
-  voterregus::loadWyoming()
+  uselections::loadAlaska(),
+  uselections::loadArizona(),
+  uselections::loadCalifornia(),
+  uselections::loadColorado(),
+  uselections::loadConnecticut(),
+  uselections::loadDelaware(),
+  uselections::loadDC(),
+  uselections::loadFlorida(),
+  uselections::loadIowa(),
+  uselections::loadKansas(),
+  uselections::loadLouisiana(),
+  uselections::loadMaine(),
+  uselections::loadMaryland(),
+  uselections::loadMassachusetts(),
+  uselections::loadNebraska(),
+  uselections::loadNevada(),
+  uselections::loadNewHampshire(),
+  uselections::loadNewJersey(),
+  uselections::loadNewMexico(),
+  uselections::loadNewYork(),
+  uselections::loadNorthCarolina(),
+  uselections::loadOklahoma(),
+  uselections::loadOregon(),
+  uselections::loadPennsylvania(),
+  uselections::loadRhodeIsland(),
+  uselections::loadSouthDakota(),
+  uselections::loadWestVirginia(),
+  uselections::loadWyoming()
 )
 
 
@@ -46,7 +46,7 @@ df <- PartyRegistration %>%
 
 PartyRegistration <- PartyRegistration %>% inner_join(df, by=c("County"="County", "Year"="Year", "Month"="Month"))
 
-countyData <- voterregus::getCountyData() %>% select(STATEFP, GEOID, NAME) %>%
+countyData <- uselections::getCountyData() %>% select(STATEFP, GEOID, NAME) %>%
   mutate_each("as.character") %>%
   mutate(NAME=recode(GEOID, "24510"="Baltimore City", "24005"="Baltimore County", .default=NAME)) %>%
   mutate(NAME=recode(GEOID, "29510"="St. Louis City", "29189"="St. Louis County", .default=NAME)) %>%
