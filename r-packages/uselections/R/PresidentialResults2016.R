@@ -22,7 +22,16 @@ load2016PresidentialResults <- function() {
     select(County, clinton, trump, johnson, stein, other, totalvotes) %>%
     as_tibble() # take out when done
 
-  # Note: Kansas was only in the harvard dataset at the statewide level.  We need to contact the state and see if we can get county level results.
+  # Kansas is not in the harvard dataset
+  # Note: Kansas results are partly official (from County websites) and partly unofficial (from counties and from secretary of state's site)
+
+  ksCountyInfo <- getCountyNameFIPSMapping('20')
+  ks <- read.xlsx("data-raw/ks/Results.xlsx", colNames=TRUE) %>%
+    mutate(otheri=ifelse(is.na(other), 0, other), totalvotes=clinton+johnson+stein+trump+otheri) %>%
+    select(CountyName, clinton, trump, johnson, stein, other, totalvotes) %>%
+    inner_join(ksCountyInfo, by=c("CountyName"="CountyName")) %>%
+    select(-CountyName) %>%
+    as_tibble()
 
   # Mississippi is not in the harvard dataset...loading from spreadsheet created by hand from scanned PDFs of county returns on state's website
 
@@ -120,7 +129,7 @@ load2016PresidentialResults <- function() {
     mutate(other=castle + `de la fuente`, totalvotes=clinton+trump+stein+johnson+other) %>%
     select(County, clinton, trump, johnson, stein, other, totalvotes)
 
-  bind_rows(df2, ms, me, ak) %>%
+  bind_rows(df2, ks, ms, me, ak) %>%
     group_by(County) %>%
     summarize_each("sum") %>%
     mutate_each("as.integer", -County)

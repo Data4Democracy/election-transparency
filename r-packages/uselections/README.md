@@ -74,7 +74,7 @@ To access the PresidentialElectionResults2016 data frame that is exposed by the 
 
 ```
 > uselections::PresidentialElectionResults2016
-# A tibble: 3,036 × 18
+# A tibble: 3,141 × 18
    County clinton trump johnson stein other totalvotes CountyName StateName StateAbbr       dPct      rPct      leanD      leanR    otherPct     dDRPct
     <chr>   <int> <int>   <int> <int> <int>      <int>      <chr>     <chr>     <chr>      <dbl>     <dbl>      <dbl>      <dbl>       <dbl>      <dbl>
 1   01001    5936 18172     546   105   214      24973    Autauga   Alabama        AL 0.23769671 0.7276659 0.32665639  3.0613208 0.008569255 0.24622532
@@ -87,7 +87,7 @@ To access the PresidentialElectionResults2016 data frame that is exposed by the 
 8   01015   13242 32865    1116   262   379      47864    Calhoun   Alabama        AL 0.27665887 0.6866330 0.40292104  2.4818758 0.007918268 0.28720151
 9   01017    5784  7843     168    44    61      13900   Chambers   Alabama        AL 0.41611511 0.5642446 0.73747291  1.3559820 0.004388489 0.42445146
 10  01019    1547  8953     147    26    60      10733   Cherokee   Alabama        AL 0.14413491 0.8341563 0.17279124  5.7873303 0.005590236 0.14733333
-# ... with 3,026 more rows, and 2 more variables: rDRPct <dbl>, State <chr>
+# ... with 3,131 more rows, and 2 more variables: rDRPct <dbl>, State <chr>
 >
 ```
 

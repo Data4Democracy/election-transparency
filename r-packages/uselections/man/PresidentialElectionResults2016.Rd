@@ -4,7 +4,7 @@
 \name{PresidentialElectionResults2016}
 \alias{PresidentialElectionResults2016}
 \title{Presidential Election Results Dataset (2016)}
-\format{A data frame with 3,036 rows and 18 variables:
+\format{A data frame with 3,141 rows and 18 variables:
 \describe{
  \item{State}{2-character FIPS code for the state}
  \item{StateAbbr}{2-character abbreviation for the state}
