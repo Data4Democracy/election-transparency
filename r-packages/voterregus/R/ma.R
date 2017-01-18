@@ -7,7 +7,7 @@ loadMassachusetts <- function() {
   countyNameFIPSMapping <- getCountyNameFIPSMapping('25') %>%
     mutate(CountyName=toupper(CountyName))
 
-  df <- read_csv("data-raw/ma/enrollment_counts_20161019.csv", col_names=FALSE) %>%
+  df <- read_csv("data-raw/ma/enrollment_counts_20161019.csv", col_names=paste0('X', seq(14)), col_types='cnncccncncncnc') %>%
     select(CountyName=X1, D=X3, R=X5, G=X7, X9, X13, N=X11)
 
   df$R <- gsub(x=unlist(lapply(strsplit(df$R, " "), head, 1)), pattern=",", replacement="")

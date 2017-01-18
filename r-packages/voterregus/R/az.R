@@ -112,6 +112,6 @@ loadArizona <- function() {
       }
     }
   }
-  dft <<- df
+  df
 }
 

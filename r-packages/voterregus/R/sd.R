@@ -5,7 +5,7 @@ loadSouthDakota <- function() {
 
   countyNameFIPSMapping <- getCountyNameFIPSMapping('46')
 
-  df <- read_csv("data-raw/sd/StatewideVotersByCountybyParty_11.8.2016.csv") %>%
+  df <- read_csv("data-raw/sd/StatewideVotersByCountybyParty_11.8.2016.csv", col_types='cnnnininn') %>%
     rename(CountyName=County, R=Republican, D=Democratic, L=Libertarian, N=`NPA/IND`) %>%
     mutate(G=NA, O=OTH+Constitution) %>%
     select(CountyName, R, D, G, L, N, O) %>%

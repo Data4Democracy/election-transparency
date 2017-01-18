@@ -9,7 +9,7 @@ loadMaryland <- function() {
     mutate(CountyName=ifelse(County=='24005', 'BALTIMORE CO.', CountyName)) %>%
     mutate(CountyName=ifelse(County=='24033', "PR. GEORGE'S", CountyName))
 
-  df <- read_csv("data-raw/md/2016_11.csv", col_names=FALSE) %>%
+  df <- read_csv("data-raw/md/2016_11.csv", col_names=paste0('X', seq(12)), col_types='cciicinnccnc') %>%
     mutate(CountyName=X1, D=X7, R=X8,
            G=gsub(x=X9, pattern="([0-9,]+) ([0-9,]+) ([0-9,]+) ([0-9,]+)", replacement="\\1"),
            L=gsub(x=X9, pattern="([0-9,]+) ([0-9,]+) ([0-9,]+) ([0-9,]+)", replacement="\\2"),

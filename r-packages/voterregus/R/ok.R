@@ -6,7 +6,7 @@ loadOklahoma <- function() {
   countyNameFIPSMapping <- getCountyNameFIPSMapping('40') %>%
     mutate(CountyName=toupper(CountyName))
 
-  df <- read_csv("data-raw/ok/ok.csv", col_names=FALSE) %>%
+  df <- read_csv("data-raw/ok/ok.csv", col_names=paste0('X', seq(6)), col_types='cnninn') %>%
     rename(CountyName=X1, D=X2, R=X3, O=X4, N=X5) %>%
     mutate(L=NA, G=NA, CountyName=trimws(gsub(x=CountyName, pattern="[ ]?[0-9]+ ([A-Z]+)", replacement="\\1"))) %>%
     mutate(CountyName=ifelse(CountyName == 'LEFLORE', "LE FLORE", CountyName)) %>%

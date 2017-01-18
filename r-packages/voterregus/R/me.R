@@ -6,7 +6,8 @@ loadMaine <- function() {
 
   countyNameFIPSMapping <- getCountyNameFIPSMapping('23')
 
-  df <- read_delim("data-raw/me/r-e-active.txt", delim="|", col_names=TRUE) %>%
+  df <- read_delim("data-raw/me/r-e-active.txt", delim="|", col_names=c('COUNTY','MUNICIPALITY','W/P','CG','SS',
+            'SR','CC','D','G','L','R','U','TOTAL','Empty'), col_types='ccccccccccccc?', skip=1) %>%
   select(COUNTY, D, G, L, R, U) %>%
   mutate(CountyName=recode(COUNTY,
                            AND='Androscoggin',
@@ -26,7 +27,7 @@ loadMaine <- function() {
                            WAS='Washington',
                            YOR='York')) %>%
   select(-COUNTY) %>%
-  rename(N=U)%>%
+  rename(N=U) %>%
   mutate_each("as.integer", -CountyName) %>%
   group_by(CountyName) %>%
   summarize_each(funs(sum(., na.rm=TRUE))) %>%

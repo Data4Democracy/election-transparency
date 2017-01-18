@@ -11,7 +11,9 @@ loadNewMexico <- function() {
 
   countyNameFIPSMapping <- mutate(countyNameFIPSMapping, CountyName=toupper(CountyName))
 
-  df <- read_csv("data-raw/nm/STATEWIDE_DEC_30_2016.csv") %>%
+  df <- read_csv("data-raw/nm/STATEWIDE_DEC_30_2016.csv", col_names=c('Jurisdiction', 'DEM', 'X1', 'REP', 'X2', 'DTS',
+                                                                      'X3', 'OTH', 'X4', 'Total'), col_types='cccccccccc',
+                 skip=1) %>%
     rename(CountyName=Jurisdiction, R=REP, D=DEM, N=DTS, O=OTH) %>%
     mutate(L=NA, G=NA) %>%
     select(CountyName, R, D, G, L, N, O) %>%

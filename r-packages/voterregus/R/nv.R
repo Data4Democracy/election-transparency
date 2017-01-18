@@ -5,7 +5,7 @@ loadNevada <- function() {
 
   countyNameFIPSMapping <- getCountyNameFIPSMapping('32')
 
-  df <- read_csv("data-raw/nv/nv.csv") %>%
+  df <- read_csv("data-raw/nv/nv.csv", col_types='cnnnnnnn') %>%
     rename(CountyName=County, R=Republican, D=Democrat, L=Libertarian, N=Nonpartisan, O=Other) %>%
     mutate(G=NA, O=O+`Independent American`) %>%
     select(CountyName, R, D, G, L, N, O) %>%

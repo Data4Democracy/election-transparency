@@ -5,7 +5,7 @@ loadNebraska <- function() {
 
   countyNameFIPSMapping <- getCountyNameFIPSMapping('31')
 
-  df <- read_csv("data-raw/ne/2016-canvass-book.csv") %>%
+  df <- read_csv("data-raw/ne/2016-canvass-book.csv", col_types='cinnnnn') %>%
     rename(CountyName=County, R=Republican, D=Democratic, L=Libertarian, N=Nonpartisan) %>%
     mutate(G=NA, O=NA) %>%
     select(CountyName, R, D, G, L, N, O) %>%

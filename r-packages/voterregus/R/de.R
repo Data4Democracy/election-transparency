@@ -5,7 +5,7 @@ loadDelaware <- function() {
 
   countyNameFIPSMapping <- getCountyNameFIPSMapping('10')
 
-  df <- read_csv("data-raw/de/e70r2001_20161201.csv", col_names=FALSE) %>%
+  df <- read_csv("data-raw/de/e70r2001_20161201.csv", col_names=paste0('X', seq(5)), col_types='cnnnn') %>%
     select(-X5) %>%
     gather(CountyName, count, X2:X4) %>%
     mutate(X1=ifelse(X1 %in% c('D','R','H','L','I','G'), X1, 'O')) %>%

@@ -1,22 +1,24 @@
-#' @importFrom rgdal readOGR
 #' @import dplyr
 #' @export
 getCountyNameFIPSMapping <- function(StateFIPSCode) {
+   getCountyData() %>%
+    filter(STATEFP==StateFIPSCode) %>%
+    select(CountyName=NAME, County=GEOID) %>% mutate_each("as.character")
+}
 
+#' @importFrom rgdal readOGR
+#' @import dplyr
+#' @export
+getCountyData <- function() {
   if (!exists("countyData", env=packageEnv)) {
     assign("countyData", readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county")@data, env=packageEnv)
   }
-
-  get("countyData", env=packageEnv) %>%
-    filter(STATEFP==StateFIPSCode) %>%
-    select(CountyName=NAME, County=GEOID) %>% mutate_each("as.character")
-
+  get("countyData", env=packageEnv)
 }
 
 #' @importFrom sp CRS spTransform
 #' @importFrom rgdal readOGR
 #' @importFrom rgeos gIntersection gArea
-#' @export
 getAlaskaPrecinctCountyMapping <- function() {
 
   if (!exists("alaskaPrecinctCountyMapping", env=packageEnv)) {
