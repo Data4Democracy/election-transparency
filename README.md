@@ -33,3 +33,5 @@ The following is a non-exhaustive list of the skills that are useful for this pr
 * **Data Extraction**
 * **Data Cleaning**
 * **Data Analysis and Modelling**
+
+*Special thanks to the [drug-spending](https://github.com/Data4Democracy/drug-spending) team for writing such a great README that we had to borrow liberally from it*
