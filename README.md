@@ -5,7 +5,7 @@
 **Project Leads:** @chris_dick, @rachelanddata, @scottcame
 
 **Maintainers (people with write/commit access):**
-* GitHub: @scottcame, @bstarling, @ehbick01, @zachmueller
+* GitHub: @scottcame, @rachelanddata, @eric_bickel, @chris_dick
 * data.world: @scottcame, @sharon, @chris_dick
 
 **Data:** Head over to [data.world](https://data.world/data4democracy/election-transparency) to check out our most up-to-date data!
