@@ -60,7 +60,7 @@ stateDemocraticRepublicanChoropleth <- function(countyLevelDf, state, labels=FAL
     county_shp_data <- county_shp@data
     state_shp = readOGR("data-raw/cb_2015_us_state_500k/", "cb_2015_us_state_500k") %>% subset(STATEFP == stateFIPS)
     if (!(state %in% c('CO'))) {
-      tolerance <- ifelse(state %in% c('NJ', 'GA'), .0001, ifelse(state=='AK', .0125, .01))
+      tolerance <- ifelse(state %in% c('NJ', 'GA', 'VA'), .0001, ifelse(state=='AK', .0125, .01))
       county_shp <- gSimplify(county_shp, tolerance)
     }
     county_shp <- gIntersection(state_shp, county_shp, byid=TRUE, id=rownames(county_shp_data))
