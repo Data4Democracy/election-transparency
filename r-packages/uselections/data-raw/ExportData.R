@@ -5,7 +5,9 @@ library(readr)
 library(rgdal)
 
 dfs <- list(
+  uselections::loadAlabama(),
   uselections::loadAlaska(),
+  uselections::loadArkansas(),
   uselections::loadArizona(),
   uselections::loadCalifornia(),
   uselections::loadColorado(),
@@ -13,12 +15,23 @@ dfs <- list(
   uselections::loadDelaware(),
   uselections::loadDC(),
   uselections::loadFlorida(),
+  uselections::loadGeorgia(),
+  uselections::loadHawaii(),
+  uselections::loadIdaho(),
+  uselections::loadIllinois(),
+  uselections::loadIndiana(),
   uselections::loadIowa(),
   uselections::loadKansas(),
+  uselections::loadKentucky(),
   uselections::loadLouisiana(),
   uselections::loadMaine(),
   uselections::loadMaryland(),
   uselections::loadMassachusetts(),
+  uselections::loadMichigan(),
+  uselections::loadMinnesota(),
+  # Mississippi does not provide county-level registration data...
+  uselections::loadMissouri(),
+  uselections::loadMontana(),
   uselections::loadNebraska(),
   uselections::loadNevada(),
   uselections::loadNewHampshire(),
@@ -26,12 +39,22 @@ dfs <- list(
   uselections::loadNewMexico(),
   uselections::loadNewYork(),
   uselections::loadNorthCarolina(),
+  uselections::loadNorthDakota(),
+  uselections::loadOhio(),
   uselections::loadOklahoma(),
   uselections::loadOregon(),
   uselections::loadPennsylvania(),
   uselections::loadRhodeIsland(),
+  uselections::loadSouthCarolina(),
   uselections::loadSouthDakota(),
+  uselections::loadTennessee(),
+  uselections::loadTexas(),
+  uselections::loadUtah(),
+  uselections::loadVermont(),
+  uselections::loadVirginia(),
+  uselections::loadWashington(),
   uselections::loadWestVirginia(),
+  uselections::loadWisconsin(),
   uselections::loadWyoming()
 )
 
@@ -42,6 +65,13 @@ df <- PartyRegistration %>%
   mutate_each(funs(replace(., which(is.na(.)), 0))) %>%
   mutate(Total=D+G+L+N+O+R, dPct=D/Total, rPct=R/Total, leanD=D/R, leanR=R/D, unaffiliatedPct=N/Total, otherPct=O/Total,
          dDRPct=D/(D+R), rDRPct=R/(D+R)) %>%
+  mutate(dPct=ifelse(N==Total, NA, dPct),
+         rPct=ifelse(N==Total, NA, rPct),
+         leanD=ifelse(N==Total, NA, leanD),
+         leanR=ifelse(N==Total, NA, leanR),
+         otherPct=ifelse(N==Total, NA, otherPct),
+         dDRPct=ifelse(N==Total, NA, dDRPct),
+         rDRPct=ifelse(N==Total, NA, rDRPct)) %>%
   select(-D, -G, -L, -N, -O, -R, -State)
 
 PartyRegistration <- PartyRegistration %>% inner_join(df, by=c("County"="County", "Year"="Year", "Month"="Month"))
@@ -54,7 +84,8 @@ countyData <- uselections::getCountyData() %>% select(STATEFP, GEOID, NAME) %>%
   select(CountyName=NAME, StateName=X1, StateAbbr=X3, County=GEOID)
 
 PartyRegistration <- PartyRegistration %>%
-  inner_join(countyData, by=c("County"="County"))
+  inner_join(countyData, by=c("County"="County")) %>%
+  mutate(Year=as.integer(Year), Month=as.integer(Month))
 
 PresidentialElectionResults2016 <- load2016PresidentialResults() %>%
   inner_join(countyData, by=c("County"="County")) %>%

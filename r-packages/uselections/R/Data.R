@@ -1,7 +1,9 @@
 #' Voter Party Registration Dataset
 #'
-#' This dataset contains voter registration by county in each political party,
-#' in the 28 states plus DC that allow party registration under state law
+#' This dataset contains voter registration by county.
+#' In the 30 states plus DC that allow party registration under state law, the registration
+#' by party is included in separate fields; in the other states, all voters are tallied under
+#' the N=Unaffiliated field.
 #'
 #' The data in this dataset were sourced from state elections websites.  We have a todo
 #' to produce a detailed document listing the data sources.
@@ -17,7 +19,14 @@
 #' Note:  Not all states capture No Party or Unaffiliated separately.  If these
 #' are reported separately for a state, they are combined in the N variable.
 #'
-#' @format A data frame with 1,306 rows and 22 variables:
+#' Note:  Mississippi is currently not included, as it does not post voter registration information on
+#' its website.  Contact to the Secretary of State is pending.
+#'
+#' This data frame has more rows than PresidentialElectionResults2016 because there are 29 extra annual registration obs for Hawaii (x4 counties = 116 rows)
+#' and 5 extra 2016 monthly obs for Arizona (x15 counties = 75 rows).  Also, as mentioned above, there are no registration data for Mississippi's 82
+#' counties.  3141+82+75+116=3250.
+#'
+#' @format A data frame with 3,250 rows and 22 variables:
 #' \describe{
 #'  \item{State}{2-character FIPS code for the state}
 #'  \item{StateAbbr}{2-character abbreviation for the state}
