@@ -18,6 +18,31 @@ install on some platforms.
 devtools::install_github("Data4Democracy/election-transparency/r-packages/uselections")
 ```
 
+Electoral Votes Dataset
+-----------------------
+
+The package includes a data frame containing the number of electoral votes allocated to each state based on the 2010 census, applicable to
+Presidential elections in 2012, 2016, and 2020.
+
+```
+> uselections::ElectoralVotes2010
+# A tibble: 51 × 4
+   State            StateName StateAbbr ElectoralVotes
+   <chr>                <chr>     <chr>          <int>
+1     01              Alabama        AL              9
+2     02               Alaska        AK              3
+3     04              Arizona        AZ             11
+4     05             Arkansas        AR              6
+5     06           California        CA             55
+6     08             Colorado        CO              9
+7     09          Connecticut        CT              7
+8     10             Delaware        DE              3
+9     11 District of Columbia        DC              3
+10    12              Florida        FL             29
+# ... with 41 more rows
+>
+```
+
 Usage - Party Registration Dataset
 -----
 
