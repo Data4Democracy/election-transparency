@@ -88,3 +88,15 @@
 #'  \item{leanR}{Lean Trump ratio (trump/clinton)}
 #' }
 "PresidentialElectionResults2016"
+
+#' Electoral Votes by State for 2012, 2016, and 2020 elections
+#'
+#' @format A data frame with 51 rows and 4 variables:
+#' \describe{
+#'  \item{State}{2-character FIPS code for the state}
+#'  \item{StateAbbr}{2-character abbreviation for the state}
+#'  \item{StateName}{Name of the state}
+#'  \item{ElectoralVotes}{Number of electoral votes allocated to the state}
+#' }
+"ElectoralVotes2010"
+

@@ -1,51 +1,51 @@
-Alabama,01,AL
-Alaska,02,AK
-Arizona,04,AZ
-Arkansas,05,AR
-California,06,CA
-Colorado,08,CO
-Connecticut,09,CT
-Delaware,10,DE
-District of Columbia,11,DC
-Florida,12,FL
-Georgia,13,GA
-Hawaii,15,HI
-Idaho,16,ID
-Illinois,17,IL
-Indiana,18,IN
-Iowa,19,IA
-Kansas,20,KS
-Kentucky,21,KY
-Louisiana,22,LA
-Maine,23,ME
-Maryland,24,MD
-Massachusetts,25,MA
-Michigan,26,MI
-Minnesota,27,MN
-Mississippi,28,MS
-Missouri,29,MO
-Montana,30,MT
-Nebraska,31,NE
-Nevada,32,NV
-New Hampshire,33,NH
-New Jersey,34,NJ
-New Mexico,35,NM
-New York,36,NY
-North Carolina,37,NC
-North Dakota,38,ND
-Ohio,39,OH
-Oklahoma,40,OK
-Oregon,41,OR
-Pennsylvania,42,PA
-Rhode Island,44,RI
-South Carolina,45,SC
-South Dakota,46,SD
-Tennessee,47,TN
-Texas,48,TX
-Utah,49,UT
-Vermont,50,VT
-Virginia,51,VA
-Washington,53,WA
-West Virginia,54,WV
-Wisconsin,55,WI
-Wyoming,56,WY
+Alabama,01,AL,9
+Alaska,02,AK,3
+Arizona,04,AZ,11
+Arkansas,05,AR,6
+California,06,CA,55
+Colorado,08,CO,9
+Connecticut,09,CT,7
+Delaware,10,DE,3
+District of Columbia,11,DC,3
+Florida,12,FL,29
+Georgia,13,GA,16
+Hawaii,15,HI,4
+Idaho,16,ID,4
+Illinois,17,IL,20
+Indiana,18,IN,11
+Iowa,19,IA,6
+Kansas,20,KS,6
+Kentucky,21,KY,8
+Louisiana,22,LA,8
+Maine,23,ME,4
+Maryland,24,MD,10
+Massachusetts,25,MA,11
+Michigan,26,MI,16
+Minnesota,27,MN,10
+Mississippi,28,MS,6
+Missouri,29,MO,10
+Montana,30,MT,3
+Nebraska,31,NE,5
+Nevada,32,NV,6
+New Hampshire,33,NH,4
+New Jersey,34,NJ,14
+New Mexico,35,NM,5
+New York,36,NY,29
+North Carolina,37,NC,15
+North Dakota,38,ND,3
+Ohio,39,OH,18
+Oklahoma,40,OK,7
+Oregon,41,OR,7
+Pennsylvania,42,PA,20
+Rhode Island,44,RI,4
+South Carolina,45,SC,9
+South Dakota,46,SD,3
+Tennessee,47,TN,11
+Texas,48,TX,38
+Utah,49,UT,6
+Vermont,50,VT,3
+Virginia,51,VA,13
+Washington,53,WA,12
+West Virginia,54,WV,5
+Wisconsin,55,WI,10
+Wyoming,56,WY,3

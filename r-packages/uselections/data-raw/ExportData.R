@@ -76,12 +76,20 @@ df <- PartyRegistration %>%
 
 PartyRegistration <- PartyRegistration %>% inner_join(df, by=c("County"="County", "Year"="Year", "Month"="Month"))
 
+states <- read_csv("data-raw/States.txt", col_names=paste0('X', seq(4)), col_types='ccci')
+
 countyData <- uselections::getCountyData() %>% select(STATEFP, GEOID, NAME) %>%
   mutate_each("as.character") %>%
   mutate(NAME=recode(GEOID, "24510"="Baltimore City", "24005"="Baltimore County", .default=NAME)) %>%
   mutate(NAME=recode(GEOID, "29510"="St. Louis City", "29189"="St. Louis County", .default=NAME)) %>%
-  inner_join(read_csv("data-raw/States.txt", col_names=paste0('X', seq(3)), col_types='ccc'), by=c("STATEFP"="X2")) %>%
+  mutate(NAME=recode(GEOID, "51760"="Richmond City", "51159"="Richmond County", .default=NAME)) %>%
+  mutate(NAME=recode(GEOID, "51770"="Roanoke City", "51161"="Roanoke County", .default=NAME)) %>%
+  mutate(NAME=recode(GEOID, "51600"="Fairfax City", "51059"="Fairfax County", .default=NAME)) %>%
+  mutate(NAME=recode(GEOID, "51620"="Franklin City", "51067"="Franklin County", .default=NAME)) %>%
+  inner_join(states, by=c("STATEFP"="X2")) %>%
   select(CountyName=NAME, StateName=X1, StateAbbr=X3, County=GEOID)
+
+ElectoralVotes2010 <- states %>% select(State=X2, StateName=X1, StateAbbr=X3, ElectoralVotes=X4)
 
 PartyRegistration <- PartyRegistration %>%
   inner_join(countyData, by=c("County"="County")) %>%
@@ -94,9 +102,12 @@ PresidentialElectionResults2016 <- load2016PresidentialResults() %>%
 
 devtools::use_data(PartyRegistration, overwrite=TRUE)
 devtools::use_data(PresidentialElectionResults2016, overwrite=TRUE)
+devtools::use_data(ElectoralVotes2010, overwrite=TRUE)
 
 rm(PartyRegistration)
 rm(PresidentialElectionResults2016)
 rm(countyData)
 rm(df)
 rm(dfs)
+rm(states)
+rm(ElectoralVotes2010)
