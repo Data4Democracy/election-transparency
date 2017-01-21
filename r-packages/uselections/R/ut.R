@@ -14,8 +14,8 @@ loadUtah <- function() {
   }
 
   df <- bind_rows(dfs) %>%
-    select(CountyName=County, Party, Total.Registered.Voters) %>%
-    spread(Party, Total.Registered.Voters) %>%
+    select(CountyName=County, Party, Registered) %>%
+    spread(Party, Registered) %>%
     rename(D=`Democratic Party`, R=`Republican Party`, L=`Libertarian Party`, N=Unaffiliated) %>%
     mutate(O=`Constitution Party` + `Independent American Party`, G=NA) %>%
     mutate(Year = 2016, Month = 11) %>% # Hardcode until we add historical data
