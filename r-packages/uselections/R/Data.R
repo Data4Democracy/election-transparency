@@ -89,14 +89,15 @@
 #' }
 "PresidentialElectionResults2016"
 
-#' Electoral Votes by State for 2012, 2016, and 2020 elections
+#' States and certain electoral attributes
 #'
 #' @format A data frame with 51 rows and 4 variables:
 #' \describe{
 #'  \item{State}{2-character FIPS code for the state}
 #'  \item{StateAbbr}{2-character abbreviation for the state}
 #'  \item{StateName}{Name of the state}
-#'  \item{ElectoralVotes}{Number of electoral votes allocated to the state}
+#'  \item{ElectoralVotes}{Number of electoral votes allocated to the state in 2010 Census for 2012, 2016, and 2020 elections}
+#'  \item{AllowsPartyRegistration}{=1 if state allows party affiliation at voter registration, =0 otherwise}
 #' }
-"ElectoralVotes2010"
+"States"
 

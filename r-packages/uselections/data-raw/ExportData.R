@@ -89,7 +89,11 @@ countyData <- uselections::getCountyData() %>% select(STATEFP, GEOID, NAME) %>%
   inner_join(states, by=c("STATEFP"="X2")) %>%
   select(CountyName=NAME, StateName=X1, StateAbbr=X3, County=GEOID)
 
-ElectoralVotes2010 <- states %>% select(State=X2, StateName=X1, StateAbbr=X3, ElectoralVotes=X4)
+States <- states %>% select(State=X2, StateName=X1, StateAbbr=X3, ElectoralVotes=X4) %>%
+  mutate(AllowsPartyRegistration=as.integer(StateAbbr %in%
+                                              c('AK','CA','CO','CT','DE','DC','FL','ID','IA','KS','KY','ME','MD',
+                                                'MA','NE','NV','NH','NJ','NM','NY','NC','OK','OR','PA','RI','SD',
+                                                'UT','WV','WY')))
 
 PartyRegistration <- PartyRegistration %>%
   inner_join(countyData, by=c("County"="County")) %>%
@@ -102,7 +106,7 @@ PresidentialElectionResults2016 <- load2016PresidentialResults() %>%
 
 devtools::use_data(PartyRegistration, overwrite=TRUE)
 devtools::use_data(PresidentialElectionResults2016, overwrite=TRUE)
-devtools::use_data(ElectoralVotes2010, overwrite=TRUE)
+devtools::use_data(States, overwrite=TRUE)
 
 rm(PartyRegistration)
 rm(PresidentialElectionResults2016)
@@ -110,4 +114,4 @@ rm(countyData)
 rm(df)
 rm(dfs)
 rm(states)
-rm(ElectoralVotes2010)
+rm(States)

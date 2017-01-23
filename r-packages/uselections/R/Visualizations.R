@@ -122,3 +122,43 @@ stateDemocraticRepublicanChoropleth <- function(countyLevelDf, state, labels=FAL
   ret
 
 }
+
+#' @import ggplot2
+#' @import dplyr
+#' @import ggthemes
+voterImpactBarChart <- function() {
+
+  PartyRegistration2016 <- PartyRegistration %>% filter(Year==2016 & Month==11)
+
+  df <- PartyRegistration2016 %>%
+    group_by(StateAbbr) %>%
+    summarize(RV=sum(Total)) %>%
+    bind_rows(data.frame(StateAbbr='MS', RV=1480191)) %>%
+    inner_join(ElectoralVotes2010, by=c('StateAbbr'='StateAbbr')) %>%
+    mutate(RVorig=RV, RV=RV/100000,
+           EVPer100KVoters=ElectoralVotes/RV,
+           avgEVPer100KVoters=538/sum(RV),
+           extraVoters=(ElectoralVotes/avgEVPer100KVoters) - RV)
+
+  df2 <- PresidentialElectionResults2016 %>%
+    group_by(StateAbbr) %>%
+    summarize_each("sum", clinton, trump) %>%
+    mutate(winner=ifelse(clinton > trump, 'Clinton', 'Trump')) %>%
+    select(StateAbbr, winner)
+
+  df <- inner_join(df, df2, by=c('StateAbbr'='StateAbbr'))
+
+  ggplot(data=df, aes(x=reorder(StateAbbr, extraVoters), y=extraVoters, fill=winner)) + geom_bar(stat='identity') +
+    labs(y='"Extra" Voters (x100,000)', x=element_blank(),
+         title='Variance in the Impact of Votes',
+         subtitle='Expressed as the effective # of "extra" voters in each state') +
+    scale_fill_manual(values=c('blue', 'red')) +
+    geom_text(data=df %>% filter(extraVoters < 0),
+              aes(label=StateAbbr, y=extraVoters), vjust=1.3) +
+    geom_text(data=df %>% filter(extraVoters >= 0),
+              aes(label=StateAbbr, y=extraVoters), vjust=-1.1) +
+    theme_economist() + theme(axis.text.x=element_blank(),
+                              axis.line.x=element_blank(),
+                              axis.ticks.x=element_blank())
+
+}
