@@ -29,7 +29,7 @@ dfs <- list(
   uselections::loadMassachusetts(),
   uselections::loadMichigan(),
   uselections::loadMinnesota(),
-  # Mississippi does not provide county-level registration data...
+  uselections::loadMississippi(),
   uselections::loadMissouri(),
   uselections::loadMontana(),
   uselections::loadNebraska(),
