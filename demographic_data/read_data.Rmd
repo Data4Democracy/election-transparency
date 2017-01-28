@@ -30,7 +30,7 @@ First we need to pull the data from the Census API. The below code pulls data at
 
 ```{r acs, results='hide', message=FALSE}
 
-api.key.install(key = '378bfe7e9514b505b44c7aff5702dc081046b38b') # You will need to enter an API key
+api.key.install(key = '') # You will need to enter an API key
 
 geokey <- geo.make(state = "*", 
                    county = "*")
