@@ -18,6 +18,7 @@ Imports:
   stringr,
   openxlsx,
   ggplot2,
-  scales
+  scales,
+  ggthemes
 LazyData: TRUE
 RoxygenNote: 5.0.1
