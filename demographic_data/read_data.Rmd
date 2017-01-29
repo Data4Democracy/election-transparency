@@ -26,7 +26,7 @@ library(tidyr, quietly = TRUE)
 
 ## Pulling and cleaning the data
 
-First we need to pull the data from the Census API. The below code pulls data at the County level by age, race, sex, and Hispanic origin.
+First we need to pull the data from the Census API. The below code pulls data at the County level by age, race, sex, and Hispanic origin as well as employment data.
 
 ```{r acs, results='hide', message=FALSE}
 
@@ -40,13 +40,14 @@ geokey <- geo.make(state = "*",
 
 pull_list <- c("B01001A",    # Sex by Age: White Alone
                "B01001B",    # Sex by Age: Black Alone
-               "B01001C",    # Sex by Age: 
-               "B01001D",    # Sex by Age:
-               "B01001E",
-               "B01001F",
-               "B01001G",
+               "B01001C",    # Sex by Age: AIAN Alone
+               "B01001D",    # Sex by Age: Asian Alone
+               "B01001E",    # Sex by Age: NHPI Alone
+               "B01001F",    # Sex by Age: Some Other Race Alone
+               "B01001G",    # Sex by Age: Multiple Races
                "B01001H",    # Sex by Age: White Alone Non-Hispanic
-               "B01001I")
+               "B01001I",    # Sex by Age: Hispanic or Latino
+               "B23001")     # Employment
 
 # Define function to pull data and dump into a data frame
 pull <- function(pull){
@@ -63,10 +64,12 @@ pull <- function(pull){
 #Apply this function over our list of tables, the result will be a list of DFs
 dfs <- lapply(pull_list, pull)
 
-# split out the non-hispanic white alone because it does not have the same number of categories
-# from the API
-df_nhwa <- dfs[[8]]
-dfs <- dfs[-8]
+# split out the data into groups that can be processed together:
+
+df_nhwa <- dfs[[8]]              # For the demographics, Non-Hispanic White alone must be separate
+df_emply <- dfs[[10]]            # Employment data
+dfs[8] <- dfs[10] <- NULL        # Rest of the demographic data that can be processed together
+
 
 demo_frame <- data.frame(NULL)
 
@@ -81,6 +84,8 @@ for (i in 1:length(dfs)){
   }
 }
 ```
+
+### Race and Hispanic Origin by Age
 
 Now that we have all of our data in on big data frame with a ton of columns, I want to work on getting something more usable. For these age, sex, race, Hispanic origin data I will give us the component parts to be able to calculate other important variables. Accordingly, I leave the data separated by race / Hispanic origin, but group age into 2 categories:
 
@@ -161,4 +166,76 @@ To get the total population sum the following categories:
 * nhpi
 * sor
 * white
+
+### Employment
+
+```{r employment, results='hide', message=FALSE}
+# Start by parsing the variables the same way we did with the race data above
+demo_frame3 <- df_emply %>%
+  melt(id = "geoid") %>%
+  separate(variable, into = c("variable", "sex", "age", "lf", "occ1", "occ2"), 
+           fill = "right", sep = "\\.\\.") 
+
+# Create a file with the total 16+ population for merging at the end
+df_checktot <- demo_frame3 %>%
+  filter(sex == "Total." & is.na(age)) %>%
+  select(-(2:7)) %>%
+  dplyr::rename(total_16plus = value)
+
+# Next get the data on number of people in and out of the labor force by age groups
+demo_frame3a <- demo_frame3 %>%
+  filter(!(sex == "Total." & is.na(age)) & !is.na(age) & !is.na(lf) & is.na(occ1)) %>%
+  select(-2, -6, -7) %>%
+  dcast(geoid + age ~ sex + lf) %>%
+  mutate(inLaborForce = Female_In.labor.force. + Male_In.labor.force.,
+         outLaborForce = Female_Not.in.labor.force + Male_Not.in.labor.force) %>%
+  select(-(3:6)) %>%
+  melt() %>%
+  dcast(geoid + variable ~ age) %>%
+  dplyr::rename(lm = variable) %>%
+  mutate(`16to19` = `16.to.19.years`,
+         `20to24` = `20.and.21.years` + `22.to.24.years`,
+         `25to54` = `25.to.29.years` + `30.to.34.years` + `35.to.44.years` + `45.to.54.years`,
+         `55to64` = `55.to.59.years` + `60.and.61.years` + `62.to.64.years`,
+         `65plus` = `65.to.69.years` + `70.to.74.years` + `75.years.and.over`) %>%
+  select(-(3:15)) %>%
+  melt() %>%
+  dcast(geoid ~ lm + variable)
+
+# Next get the number of people that are employed, employed in the military, and unemployed
+demo_frame3b <- demo_frame3 %>%
+  filter(!(sex == "Total." & is.na(age)) & !is.na(age) & !is.na(lf) & !is.na(occ1)) %>%
+  mutate(occ2 = ifelse(occ1 == "In.Armed.Forces", "EmployedMilitary", occ2)) %>%
+  select(-2, -6) %>%
+  filter(!is.na(occ2)) %>%
+  dcast(geoid + age + occ2 ~ sex + lf, value.var = 'value') %>%
+  mutate(inLaborForce = Female_In.labor.force + Male_In.labor.force) %>%
+  select(-(4:5)) %>%
+  melt() %>%
+  dcast(geoid + occ2 + variable ~ age) %>%
+  dplyr::rename(lm = variable) %>%
+  mutate(`16to19` = `16.to.19.years`,
+         `20to24` = `20.and.21.years` + `22.to.24.years`,
+         `25to54` = `25.to.29.years` + `30.to.34.years` + `35.to.44.years` + `45.to.54.years`,
+         `55to64` = `55.to.59.years` + `60.and.61.years` + `62.to.64.years`) %>%
+  select(-(3:13)) %>%
+  melt() %>%
+  dcast(geoid ~ occ2 + variable) 
+
+# Merge them all together to get the final dataset, add total population by age group
+employ_final <- df_checktot %>%
+  left_join(demo_frame3a, by = "geoid") %>%
+  left_join(demo_frame3b, by = "geoid") %>%
+  mutate(total_16to19 = inLaborForce_16to19 + outLaborForce_16to19,
+         total_20to24 = inLaborForce_20to24 + outLaborForce_20to24,
+         total_25to54 = inLaborForce_25to54 + outLaborForce_25to54,
+         total_55to64 = inLaborForce_55to64 + outLaborForce_55to64,
+         total_65plus = inLaborForce_65plus + outLaborForce_65plus) %>%
+  select(1:2, 25:29, 3:24)
+```
+
+I did not calculate percentages because I am not sure what we want to use. However, it is important to understand what will sum and what will not:
+
+1. inLaborMarket and outLaborMarket will sum to total
+2. EmployedMilitary, Employed, and Unemployed will sum to inLaborMarket, except for 65 plus where data are not reported for employment (but is for in and out of the labor market)
 
