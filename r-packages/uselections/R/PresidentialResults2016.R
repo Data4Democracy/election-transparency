@@ -20,6 +20,7 @@ load2016PresidentialResults <- function() {
     mutate(County=ifelse(County=='46113', '46102', County)) %>% # miscode in the Harvard data
     mutate(County=ifelse(County=='29380', '29085', County)) %>% # Missouri tabulates Kansas City election results separately.  Most of KC is in Jackson County.  Best we can do.
     select(County, clinton, trump, johnson, stein, other, totalvotes) %>%
+    mutate(trump=ifelse(County=='04027', 25165, trump), totalvotes=ifelse(County=='04027', 52416, totalvotes)) %>% # error in Harvard compilation
     as_tibble() # take out when done
 
   # Kansas is not in the harvard dataset.  Loading from spreadsheet converted from SOS PDF obtained from DKE
