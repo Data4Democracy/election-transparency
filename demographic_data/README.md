@@ -7,11 +7,13 @@ We need to collect non-voting related data for use in our other projects here on
 Like our other projects we are storing data on [data.world](https://data.world/data4democracy/election-transparency). Currently, we have posted the following supplementary datasets:
 
 1. [demo_ACS2015.csv](https://data.world/data4democracy/election-transparency/file/demo_ACS2015.csv)
+2. [employment_ACS2015.csv](https://data.world/data4democracy/election-transparency/file/employment_2015ACS.csv)
 
 ## What have we collected so far?
 
 - American Community Survey (2015 5-year)
  - Age by Race (County)
+ - Employment and Labor Force Participation (County)
 
 ## What else do we have on our list?
 
