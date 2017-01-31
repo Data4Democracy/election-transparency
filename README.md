@@ -17,6 +17,8 @@ There are several related veins of work going on in the group at the current tim
 * **Data Visualization**
 * **Modelling and Outlier Detection**
 
+For more on the objectives of the group, take a look at our [objectives statement](https://github.com/Data4Democracy/election-transparency/blob/master/Objectives.md).
+
 ## Getting Started
 
 ### Want to Contribute?
