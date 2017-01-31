@@ -42,6 +42,7 @@ Our data currently include, for every county in the United States:
 		* Ethnicity (Hispanic / non-Hispanic)
 		* Educational attainment (population by Census categories)
 		* Median household income
+		* Employment and Labor Market Participation
 	* Oct 2016 employment and unemployment (From the Census Current Population Survey, via Bureau of Labor Statistics)
 	* Total employment and manufacturing employment in 1980, 1990, 2000, 2010, and 2016 from the Bureau of Economic Analysis
 * Election-related attributes of each of the 50 states plus DC, including:  Number of electoral votes, type of voter ID law in place in 2016 ([data.world](https://data.world/data4democracy/election-transparency/file/States.csv))
