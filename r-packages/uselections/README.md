@@ -2,9 +2,9 @@ Overview
 --------
 
 The uselections package provides functionality for loading information about voter registration and election results in the
-United States.  The initial goal is to provide data on registration in states that allow party affiliation as close to the
-time of the 2016 general election as data are available, as well as 2016 presidential election results. We will iterate on this
-initial goal to include historical data and also data from states that do not support party affiliation.
+United States.  The initial goal is to provide data on registration (including party affiliation in states that allow it) as close to the time of the 2016 general election as data are available, as well as 2016 presidential election results. We will iterate on this initial goal to include additional historical data.
+
+We have also added a "County Characteristics" data frame, with interesting explanatory variables that could be useful in visualizing and/or modeling 2016 election results.
 
 Installation
 ------------
@@ -18,33 +18,35 @@ install on some platforms.
 devtools::install_github("Data4Democracy/election-transparency/r-packages/uselections")
 ```
 
-Electoral Votes Dataset
------------------------
+Usage - States Dataset
+----------------------
 
-The package includes a data frame containing the number of electoral votes allocated to each state based on the 2010 census, applicable to
-Presidential elections in 2012, 2016, and 2020.
+The package includes a data frame containing some useful state-level variables, including:
+
+* the number of electoral votes allocated to each state based on the 2010 census, applicable to Presidential elections in 2012, 2016, and 2020.
+* whether state law allows party affiliation at registration
 
 ```
-> uselections::ElectoralVotes2010
-# A tibble: 51 × 4
-   State            StateName StateAbbr ElectoralVotes
-   <chr>                <chr>     <chr>          <int>
-1     01              Alabama        AL              9
-2     02               Alaska        AK              3
-3     04              Arizona        AZ             11
-4     05             Arkansas        AR              6
-5     06           California        CA             55
-6     08             Colorado        CO              9
-7     09          Connecticut        CT              7
-8     10             Delaware        DE              3
-9     11 District of Columbia        DC              3
-10    12              Florida        FL             29
+> uselections::States
+# A tibble: 51 × 5
+   State            StateName StateAbbr ElectoralVotes AllowsPartyRegistration
+   <chr>                <chr>     <chr>          <int>                   <int>
+1     01              Alabama        AL              9                       0
+2     02               Alaska        AK              3                       1
+3     04              Arizona        AZ             11                       0
+4     05             Arkansas        AR              6                       0
+5     06           California        CA             55                       1
+6     08             Colorado        CO              9                       1
+7     09          Connecticut        CT              7                       1
+8     10             Delaware        DE              3                       1
+9     11 District of Columbia        DC              3                       1
+10    12              Florida        FL             29                       1
 # ... with 41 more rows
 >
 ```
 
 Usage - Party Registration Dataset
------
+----------------------------------
 
 To access the PartyRegistration data frame that is exposed by the package:
 
@@ -93,7 +95,7 @@ For detailed documentation on the data frame:  `?uselections::PartyRegistration`
 * leanR = Lean Republican ratio (R/D)
 
 Usage - 2016 Results Dataset
------
+----------------------------
 
 To access the PresidentialElectionResults2016 data frame that is exposed by the package:
 
@@ -136,4 +138,86 @@ For detailed documentation on the data frame:  `?uselections::PresidentialElecti
 * rDRPct = Trump votes as percentage of Clinton plus Trump votes (trump/(clinton+trump))
 * leanD = Lean Clinton ratio (clinton/trump)
 * leanR = Lean Trump ratio (trump/clinton)
+
+Usage - County Characteristics Dataset
+--------------------------------------
+
+To access the CountyCharacteristics data frame that is exposed by the package:
+
+```
+> uselections::CountyCharacteristics
+# A tibble: 3,141 × 49
+   County MedianHouseholdIncome TotalPopulation  Male Female Age0_4 Age5_9 Age10_14 Age15_19 Age20_24 Age25_34 Age35_44
+    <chr>                 <int>           <int> <int>  <int>  <int>  <int>    <int>    <int>    <int>    <int>    <int>
+1   01001                 51281           55221 26745  28476   3242   3890     4314     4034     3422     6724     7716
+2   01003                 50254          195121 95314  99807  10494  12787    12868    11793    10178    22740    24627
+3   01005                 32964           26932 14497  12435   1476   1752     1570     1493     1833     3870     3360
+4   01007                 38678           22604 12073  10531   1133   1458     1420     1603     1361     3086     3445
+5   01009                 45813           57710 28512  29198   3545   3773     3921     3923     3140     6768     7445
+6   01011                 31938           10678  5660   5018    675    660      575      456      874     1321     1686
+7   01013                 32229           20354  9502  10852   1243   1389     1314     1140     1272     2456     2353
+8   01015                 41703          116648 56274  60374   6816   7538     7168     7780     8646    14763    14167
+9   01017                 34177           34079 16258  17821   2040   1956     2058     2031     2180     3876     4171
+10  01019                 36296           26008 12975  13033   1285   1509     1554     1502     1424     2524     3059
+# ... with 3,131 more rows, and 37 more variables: Age45_54 <int>, Age55_59 <int>, Age60_64 <int>, Age65_74 <int>,
+#   Age75_84 <int>, Age85 <int>, MedianAge <dbl>, White <int>, Black <int>, AmericanIndianAlaskaNative <int>, Asian <int>,
+#   NativeHawaiianPacificIslander <int>, OtherRace <int>, Hispanic <int>, Population25Plus <int>, EdK8 <int>, Ed9_12 <int>,
+#   EdHS <int>, EdCollNoDegree <int>, EdAssocDegree <int>, EdBachelorDegree <int>, EdGraduateDegree <int>,
+#   MedianHousingCosts <int>, MfgEmp1970 <int>, MfgEmp1980 <int>, MfgEmp1990 <int>, MfgEmp2001 <int>, MfgEmp2015 <int>,
+#   TotalEmp1970 <int>, TotalEmp1980 <int>, TotalEmp1990 <int>, TotalEmp2001 <int>, TotalEmp2015 <int>,
+#   LandAreaSqMiles <dbl>, Employment <dbl>, LaborForce <dbl>, Unemployment <dbl>
+>
+```
+
+For detailed documentation on the data frame:  `?uselections::CountyCharacteristics`.  In short:
+
+* County = 2-character FIPS code for the county
+* MedianHouseholdIncome = Median Household Income (2015 ACS 5-year estimate)
+* TotalPopulation = Total County Population (2015 ACS 5-year estimate)
+* Male = Total County Male Population (2015 ACS 5-year estimate)
+* Female = County Female Population (2015 ACS 5-year estimate)
+* Age0_4 = County Population Age 0-4 (2015 ACS 5-year estimate)
+* Age5_9 = County Population Age 5-9 (2015 ACS 5-year estimate)
+* Age10_14 = County Population Age 10-14 (2015 ACS 5-year estimate)
+* Age15_19 = County Population Age 15-19 (2015 ACS 5-year estimate)
+* Age20_24 = County Population Age 20-24 (2015 ACS 5-year estimate)
+* Age25_34 = County Population Age 25-34 (2015 ACS 5-year estimate)
+* Age35_44 = County Population Age 35-44 (2015 ACS 5-year estimate)
+* Age45_54 = County Population Age 45-54 (2015 ACS 5-year estimate)
+* Age55_59 = County Population Age 55-59 (2015 ACS 5-year estimate)
+* Age60_64 = County Population Age 60-64 (2015 ACS 5-year estimate)
+* Age65_74 = County Population Age 65-74 (2015 ACS 5-year estimate)
+* Age75_84 = County Population Age 75-84 (2015 ACS 5-year estimate)
+* Age85 = County Population Age 85+ (2015 ACS 5-year estimate)
+* MedianAge = Median Age in County (2015 ACS 5-year estimate)
+* White = County Population, Race=White (2015 ACS 5-year estimate)
+* Black = County Population, Race=Black (2015 ACS 5-year estimate)
+* AmericanIndianAlaskaNative = County Population, Race=American Indian / Alaska Native (2015 ACS 5-year estimate)
+* Asian = County Population, Race=Asian (2015 ACS 5-year estimate)
+* NativeHawaiianPacificIslander = County Population, Race=Native Hawaiian / Pacific Islander (2015 ACS 5-year estimate)
+* OtherRace = County Population, Race=Other (2015 ACS 5-year estimate)
+* Hispanic = County Population, Ethnicity=Hispanic (2015 ACS 5-year estimate)
+* Population25Plus = County Population Age 25+ (2015 ACS 5-year estimate)
+* EdK8 = County Population with Education 8th grade or less (2015 ACS 5-year estimate)
+* Ed9_12 = County Population with Education 9th-12th grade (2015 ACS 5-year estimate)
+* EdHS = County Population, High School Graduate / equivalent (2015 ACS 5-year estimate)
+* EdCollNoDegree = County Population, some college (2015 ACS 5-year estimate)
+* EdAssocDegree = County Population, associate degree (2015 ACS 5-year estimate)
+* EdBachelorDegree = County Population, bachelor degree (2015 ACS 5-year estimate)
+* EdGraduateDegree = County Population, graduate degree (2015 ACS 5-year estimate)
+* MedianHousingCosts = Median County Monthly Housing Costs (2015 ACS 5-year estimate)
+* MfgEmp1970 = County Manufacturing Employment in 1970
+* MfgEmp1980 = County Manufacturing Employment in 1980
+* MfgEmp1990 = County Manufacturing Employment in 1990
+* MfgEmp2001 = County Manufacturing Employment in 2001
+* MfgEmp2015 = County Manufacturing Employment in 2015
+* TotalEmp1970 = County Total Employment in 1970
+* TotalEmp1980 = County Total Employment in 1980
+* TotalEmp1990 = County Total Employment in 1990
+* TotalEmp2001 = County Total Employment in 2001
+* TotalEmp2015 = County Total Employment in 2015
+* LandAreaSqMiles = County Land Area (in square miles)
+* Employment = County Employment, Oct 2015
+* LaborForce = County Labor Force, Oct 2015
+* Unemployment = County Unemployment, Oct 2015
 
