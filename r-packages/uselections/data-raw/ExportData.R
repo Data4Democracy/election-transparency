@@ -96,17 +96,26 @@ States <- states %>% select(State=X2, StateName=X1, StateAbbr=X3, ElectoralVotes
                                                 'UT','WV','WY')))
 
 PartyRegistration <- PartyRegistration %>%
-  inner_join(countyData, by=c("County"="County")) %>%
+  inner_join(countyData, by="County") %>%
   mutate(Year=as.integer(Year), Month=as.integer(Month))
 
 PresidentialElectionResults2016 <- load2016PresidentialResults() %>%
-  inner_join(countyData, by=c("County"="County")) %>%
+  inner_join(countyData, by="County") %>%
   mutate(dPct=clinton/totalvotes, rPct=trump/totalvotes, leanD=clinton/trump, leanR=trump/clinton, otherPct=other/totalvotes,
          dDRPct=clinton/(clinton+trump), rDRPct=trump/(clinton+trump), State=substr(County, 1, 2))
+
+CountyArea <- getCountyData() %>% mutate(LandAreaSqMiles=(as.numeric(as.character(ALAND)))*0.000000386102159) %>%
+  select(GEOID, LandAreaSqMiles) %>%
+  mutate(GEOID=as.character(GEOID))
+
+CountyCharacteristics <- loadCountyACSData() %>% full_join(loadCountyBEAData(), by="County") %>%
+  inner_join(CountyArea, by=c('County'='GEOID')) %>%
+  inner_join(loadCountyBLSData(), by='County')
 
 devtools::use_data(PartyRegistration, overwrite=TRUE)
 devtools::use_data(PresidentialElectionResults2016, overwrite=TRUE)
 devtools::use_data(States, overwrite=TRUE)
+devtools::use_data(CountyCharacteristics, overwrite=TRUE)
 
 rm(PartyRegistration)
 rm(PresidentialElectionResults2016)
@@ -115,3 +124,5 @@ rm(df)
 rm(dfs)
 rm(states)
 rm(States)
+rm(CountyCharacteristics)
+rm(CountyArea)
