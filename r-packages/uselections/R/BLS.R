@@ -3,6 +3,8 @@
 #' @export
 loadCountyBLSData <- function() {
 
+  # https://download.bls.gov/pub/time.series/la/la.data.64.County
+
   df <- read_tsv('data-raw/la.data.64.County', na=c('-')) %>%
     filter(year==2016) %>% filter(period=='M10') %>%
     mutate(County=substr(series_id, 6, 10), type=substr(series_id, 20, 20)) %>%
