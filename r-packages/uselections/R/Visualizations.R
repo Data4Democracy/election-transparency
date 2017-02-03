@@ -56,9 +56,9 @@ stateDemocraticRepublicanChoropleth <- function(countyLevelDf, state, labels=FAL
     stateFIPS <- df[1, stateFIPSColumnName] %>% unlist()
     stateName <- df[1, stateNameColumnName] %>% unlist()
 
-    county_shp = readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county") %>% subset(STATEFP == stateFIPS)
+    county_shp <- readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county") %>% subset(STATEFP == stateFIPS)
     county_shp_data <- county_shp@data
-    state_shp = readOGR("data-raw/cb_2015_us_state_500k/", "cb_2015_us_state_500k") %>% subset(STATEFP == stateFIPS)
+    state_shp <- readOGR("data-raw/cb_2015_us_state_500k/", "cb_2015_us_state_500k") %>% subset(STATEFP == stateFIPS)
     if (!(state %in% c('CO'))) {
       tolerance <- ifelse(state %in% c('NJ', 'GA', 'VA'), .0001, ifelse(state=='AK', .0125, .01))
       county_shp <- gSimplify(county_shp, tolerance)

@@ -23,7 +23,7 @@ getAlaskaPrecinctCountyMapping <- function() {
 
   if (!exists("alaskaPrecinctCountyMapping", env=packageEnv)) {
 
-    county_shp = readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county") %>% subset(.$STATEFP == '02')
+    county_shp <- readOGR("data-raw/tl_2016_us_county/", "tl_2016_us_county") %>% subset(.$STATEFP == '02')
     precinct_shp <- readOGR("data-raw/ak/2013-SW-Proc-Shape-files/", "2013-SW-Proc-Shape-files")
 
     crs <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
