@@ -112,13 +112,17 @@ CountyCharacteristics <- loadCountyACSData() %>% full_join(loadCountyBEAData(), 
   inner_join(CountyArea, by=c('County'='GEOID')) %>%
   inner_join(loadCountyBLSData(), by='County')
 
+AlaskaPrecinctBoroughMapping <- getAlaskaPrecinctCountyMapping()
+
 devtools::use_data(PartyRegistration, overwrite=TRUE)
 devtools::use_data(PresidentialElectionResults2016, overwrite=TRUE)
 devtools::use_data(States, overwrite=TRUE)
 devtools::use_data(CountyCharacteristics, overwrite=TRUE)
+devtools::use_data(AlaskaPrecinctBoroughMapping, overwrite=TRUE)
 
 rm(PartyRegistration)
 rm(PresidentialElectionResults2016)
+rm(AlaskaPrecinctBoroughMapping)
 rm(countyData)
 rm(df)
 rm(dfs)

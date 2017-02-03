@@ -19,6 +19,8 @@ getCountyData <- function() {
 #' @importFrom sp CRS spTransform
 #' @importFrom rgdal readOGR
 #' @importFrom rgeos gIntersection gArea
+#' @importFrom tibble as_tibble
+#' @export
 getAlaskaPrecinctCountyMapping <- function() {
 
   if (!exists("alaskaPrecinctCountyMapping", env=packageEnv)) {
@@ -61,7 +63,7 @@ getAlaskaPrecinctCountyMapping <- function() {
       precincts <- c(precincts, as.character(ps$DISTRICT))
     }
 
-    precinctCountyMap <- data.frame(Precinct=precincts, County=matchedBoroughs, stringsAsFactors=FALSE)
+    precinctCountyMap <- data.frame(Precinct=precincts, County=matchedBoroughs, stringsAsFactors=FALSE) %>% as_tibble()
     assign("alaskaPrecinctCountyMapping", precinctCountyMap, env=packageEnv)
 
   }

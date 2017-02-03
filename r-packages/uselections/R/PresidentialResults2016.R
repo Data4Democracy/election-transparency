@@ -7,7 +7,7 @@
 #' @export
 load2016PresidentialResults <- function() {
 
-  df <- read_csv("https://query.data.world/s/eu9r2968zroqabxcbpbmwj0eb", col_types = 'cccciiiiiin')
+  df <- read_csv("data-raw/president-wide.csv", col_types = 'cccciiiiiin')
 
   df2 <- df %>%
     filter(!(state %in% c('MS', 'ME', 'AK', 'KS'))) %>%

@@ -97,6 +97,15 @@
 #' }
 "States"
 
+#' Mapping of Alaska precincts to boroughs / census areas
+#'
+#' @format A data frame with 441 rows and 2 variables:
+#' \describe{
+#'  \item{Precinct}{The precinct identifier}
+#'  \item{County}{the 3-digit FIPS code (i.e., minus the state prefix) for the borough or census area}
+#' }
+"AlaskaPrecinctBoroughMapping"
+
 #' Socio-economic and demographic characteristics of counties
 #'
 #' @format A data frame with 3,141 rows and 49 variables:
