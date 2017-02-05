@@ -1,5 +1,19 @@
 ## Home to the Redistricting Project
 
+### Collecting Data
+
+To collect needed elections results data, we are teaming up with the folks over at [OpenElections](http://www.openelections.net/). If you are interested in helping out with the cause, please join our [open-elections](https://datafordemocracy.slack.com/messages/open-elections) slack channel. The [OpenElections Project GitHub](https://github.com/openelections) page is a good place to start. The following projects are ones that the team has specifically asked us for help with:
+
+1. [Kentucky Elections Data](https://github.com/openelections/openelections-data-ky). These data are mostly in PDFs that require using Tabula (or something similar) to get into CSVs. Older data will require OCR software.
+2. [Mississippi Elections Data](https://github.com/openelections/openelections-data-ms). These data are in PDFs that will require using OCR software to create the CSVs.
+3. [New York Elections Data](https://github.com/openelections/openelections-data-ny). These data are in PDFs and Excel files.
+
+If you would like to contribute, please do the following:
+
+1. Join the [open-elections](https://datafordemocracy.slack.com/messages/open-elections) slack channel.
+2. Let me know you are interested in the project. If there is a state you want to work on let me know, if not I can assign you one.
+3. Once you have your assigned year and state, go on to the OpenElections GitHub and comment on the issue that you wish to work on so the team does not assign it to anyone else.
+
 ### Questions We Would Like to Answer
 
 - How much do current district boundaries deviate from a fairly-drawn district? 
