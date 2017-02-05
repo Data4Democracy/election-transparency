@@ -113,7 +113,7 @@
 
 #' Socio-economic and demographic characteristics of counties
 #'
-#' @format A data frame with 3,141 rows and 49 variables:
+#' @format A data frame with 3,141 rows and 52 variables:
 #' \describe{
 #' \item{County}{2-character FIPS code for the county}
 #' \item{MedianHouseholdIncome}{Median Household Income (2015 ACS 5-year estimate)}
@@ -164,6 +164,9 @@
 #' \item{Employment}{County Employment, Oct 2015}
 #' \item{LaborForce}{County Labor Force, Oct 2015}
 #' \item{Unemployment}{County Unemployment, Oct 2015}
+#' \item{NCHS_UrbanRural2013}{CDC census-based NCHS Urban-Rural Classification Scheme for Counties (2010 Census)}
+#' \item{NCHS_UrbanRural2006}{CDC census-based NCHS Urban-Rural Classification Scheme for Counties (2000 Census)}
+#' \item{NCHS_UrbanRural1990}{CDC census-based NCHS Urban-Rural Classification Scheme for Counties (1990 Census)}
 #' }
 "CountyCharacteristics"
 
