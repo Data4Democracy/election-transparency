@@ -146,7 +146,7 @@ To access the CountyCharacteristics data frame that is exposed by the package:
 
 ```
 > uselections::CountyCharacteristics
-# A tibble: 3,141 × 49
+# A tibble: 3,141 × 52
    County MedianHouseholdIncome TotalPopulation  Male Female Age0_4 Age5_9 Age10_14 Age15_19 Age20_24 Age25_34 Age35_44
     <chr>                 <int>           <int> <int>  <int>  <int>  <int>    <int>    <int>    <int>    <int>    <int>
 1   01001                 51281           55221 26745  28476   3242   3890     4314     4034     3422     6724     7716
@@ -165,7 +165,8 @@ To access the CountyCharacteristics data frame that is exposed by the package:
 #   EdHS <int>, EdCollNoDegree <int>, EdAssocDegree <int>, EdBachelorDegree <int>, EdGraduateDegree <int>,
 #   MedianHousingCosts <int>, MfgEmp1970 <int>, MfgEmp1980 <int>, MfgEmp1990 <int>, MfgEmp2001 <int>, MfgEmp2015 <int>,
 #   TotalEmp1970 <int>, TotalEmp1980 <int>, TotalEmp1990 <int>, TotalEmp2001 <int>, TotalEmp2015 <int>,
-#   LandAreaSqMiles <dbl>, Employment <dbl>, LaborForce <dbl>, Unemployment <dbl>
+#   LandAreaSqMiles <dbl>, Employment <dbl>, LaborForce <dbl>, Unemployment <dbl>, NCHS_UrbanRural2013 <chr>, NCHS_UrbanRural2006 <chr>,
+#   NCHS_UrbanRural1990 <chr>
 >
 ```
 
@@ -220,4 +221,6 @@ For detailed documentation on the data frame:  `?uselections::CountyCharacterist
 * Employment = County Employment, Oct 2015
 * LaborForce = County Labor Force, Oct 2015
 * Unemployment = County Unemployment, Oct 2015
-
+* NCHS_UrbanRural2013 = CDC census-based NCHS Urban-Rural Classification Scheme for Counties (2010 Census)
+* NCHS_UrbanRural2006 = CDC census-based NCHS Urban-Rural Classification Scheme for Counties (2000 Census)
+* NCHS_UrbanRural1990 = CDC census-based NCHS Urban-Rural Classification Scheme for Counties (1990 Census)
