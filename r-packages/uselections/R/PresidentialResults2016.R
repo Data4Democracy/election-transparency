@@ -121,7 +121,7 @@ load2016PresidentialResults <- function() {
     group_by(Precinct) %>%
     summarize_each("sum")
 
-  precinctCountyMap <- getAlaskaPrecinctCountyMapping()
+  precinctCountyMap <- getAlaskaPrecinctCountyMapping() %>% filter(Year==2013) %>% select(-Year)
 
   ak <- PrecinctVotes  %>%
     inner_join(precinctCountyMap, by=c("Precinct"="Precinct")) %>%
