@@ -1,0 +1,42 @@
+---
+title: "Data.World Example"
+author: "Chris Dick"
+date: "February 6, 2017"
+output: html_document
+---
+
+# Getting Started with the election-transparency data on data.world in R
+
+You want to start using our election-transparency data, but you aren't quite sure how to get the data from data.world. This document will walk you through the steps you need to take to run your first query against our databases, and get you on the road to visualizing and modeling some elections data!
+
+## Step 1: Get a data.world account
+
+If you don't already have one, head on over to [data.world](https://data.world/) and sign up for an account.
+
+While you are there. Head over and get your [API Key](https://data.world/settings/advanced).
+
+## Step 2: Load up the R package for retreiving data from data.world
+
+The data.world folks were nice enough to create an R package to make writing queries and getting data from our datasets really straighforward. Make sure you have installed the `devtools` package in R, then you can run the following command:
+
+`devtools::install_github("datadotworld/data.world-r")`
+
+If you run into any issues check out their [GitHub Repo](https://github.com/datadotworld/data.world-r).
+
+## Step 3: Get some data
+
+Now that you have the data.world R package it is time to get some data. I will start by pulling the 2016 Presidential Election Results into a DataFrame.
+
+```{r}
+library(data.world)
+
+# Set up a connection with your API Token
+con <- data.world(token = "") # Paste your token here
+
+# Write your first query
+
+df_2016 <- data.world::query(con, dataset = "data4democracy/election-transparency",
+                             query = "SELECT *
+                             FROM `PresidentialElectionResults2016`")
+```
+
