@@ -8,7 +8,7 @@
 * GitHub: @scottcame, @rachelanddata, @eric_bickel, @chris_dick
 * data.world: @scottcame, @sharon, @chris_dick
 
-**Data:** Head over to [data.world](https://data.world/data4democracy/election-transparency) to check out our most up-to-date data!
+**Data:** Head over to [data.world](https://data.world/data4democracy/election-transparency) to check out our most up-to-date data! If you are interested in an explanation of everything the group has collected, head over to the [data-dictionary](https://github.com/Data4Democracy/election-transparency/tree/master/data-dictionary)
 
 **Group Description:** Our group is focused on work that will further the transparency and understanding of the U.S. electoral system. From making elections data more readily and easily available, to creating models that help us better understand why elections turn out the way they do, this group is ready to tackle it! Currently, we are working on the following projects - and the team leads are always willing to work on other projects, **so let us know if you have a great idea**: 
 
