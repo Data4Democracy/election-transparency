@@ -168,6 +168,11 @@
 #' \item{NCHS_UrbanRural2013}{CDC census-based NCHS Urban-Rural Classification Scheme for Counties (2010 Census)}
 #' \item{NCHS_UrbanRural2006}{CDC census-based NCHS Urban-Rural Classification Scheme for Counties (2000 Census)}
 #' \item{NCHS_UrbanRural1990}{CDC census-based NCHS Urban-Rural Classification Scheme for Counties (1990 Census)}
+#' \item{Married}{Total married population (2015 ACS 5-year estimates)}
+#' \item{Widowed}{Total widowed population (2015 ACS 5-year estimates)}
+#' \item{Separated}{Total separated population (2015 ACS 5-year estimates)}
+#' \item{Divorced}{Total divorced population (2015 ACS 5-year estimates)}
+#' \item{NeverMarried}{Total never-married population (2015 ACS 5-year estimates)}
 #' }
 "CountyCharacteristics"
 

@@ -53,13 +53,22 @@ loadCountyACSData <- function() {
     rename(County=X2, Population25Plus=X64, EdK8=X76, Ed9_12=X88, EdHS=X100, EdCollNoDegree=X112, EdAssocDegree=X124, EdBachelorDegree=X136,
            EdGraduateDegree=X148)
 
-  # todo: housing costs:  https://factfinder.census.gov/bkmk/table/1.0/en/ACS/15_5YR/B25105/0100000US.05000.003
+  # American Fact Finder: https://factfinder.census.gov/bkmk/table/1.0/en/ACS/15_5YR/B25105/0100000US.05000.003
   # then download the data file to the data-raw directory
   housingCostsDf <- read_csv('data-raw/ACS_15_5YR_B25105_with_ann.csv', skip=2, col_names=FALSE,
                              col_types=cols_only(X2=col_character(), X4=col_integer())) %>%
     rename(MedianHousingCosts=X4, County=X2)
 
+  # American Fact Finder: https://factfinder.census.gov/bkmk/table/1.0/en/ACS/15_5YR/S1201/0100000US.05000.003
+  # then download the data file to the data-raw directory
+  maritalStatusDf <- read_csv('data-raw/ACS_15_5YR_S1201_with_ann.csv', skip=2, col_names=FALSE,
+                              col_types=cols_only(X2=col_character(), X4=col_integer(), X6=col_double(), X8=col_double(),
+                                                  X10=col_double(), X12=col_double(), X14=col_double())) %>%
+    rename(County=X2) %>%
+    mutate(Married=X6*X4/100, Widowed=X8*X4/100, Divorced=X10*X4/100, Separated=X12*X4/100, NeverMarried=X14*X4/100) %>%
+    select(-starts_with('X')) %>% mutate_each("round", -County) %>% mutate_each("as.integer", -County)
 
-  inner_join(medianIncomeDf, populationDf, by="County") %>% inner_join(educationDf, by="County") %>% inner_join(housingCostsDf, by="County")
+  inner_join(medianIncomeDf, populationDf, by="County") %>% inner_join(educationDf, by="County") %>%
+    inner_join(housingCostsDf, by="County") %>% inner_join(maritalStatusDf, by="County")
 
 }
