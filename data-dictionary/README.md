@@ -12,7 +12,7 @@ The election-transparency team has been busy collecting data to work on all of o
 
 **employment_2015ACS.csv**
 
-**PartyRegistration.csv**
+**[PartyRegistration.csv](https://data.world/data4democracy/election-transparency/file/PartyRegistration.csv)** (*[Data Dictionary](https://github.com/Data4Democracy/election-transparency/blob/master/data-dictionary/county-level/PartyRegistration.md)*) - This file reports voter registration (by party where available) by month and year. In states where registration by party is not allowed, all those registered to vote are grouped under `'N' = Voters registered as unaffiliated with a party`. These data were collected from each state's Secretary of State Website.  
 
 **PresidentialElectionResults2000.csv**
 
