@@ -162,3 +162,29 @@ voterImpactBarChart <- function() {
                               axis.ticks.x=element_blank())
 
 }
+
+#' @import ggplot2
+#' @import dplyr
+#' @import ggthemes
+#' @export
+diversityPartyScatterPlot <- function() {
+
+  df <- PresidentialElectionResults2016 %>%
+    inner_join(CountyCharacteristics, by="County") %>%
+    mutate(TotalPopulation=TotalPopulation/1000) %>%
+    select(State, CountyName, dDRPct, SimpsonDiversityIndex, TotalPopulation)
+
+  sdf <- PresidentialElectionResults2016 %>%
+    group_by(State) %>%
+    summarize_each("sum", clinton, trump) %>%
+    mutate(winner=ifelse(clinton > trump, 'Clinton', 'Trump'))
+
+  df <- inner_join(df, sdf, by='State')
+
+  ggplot(data=df, aes(x=SimpsonDiversityIndex, y=dDRPct)) + geom_point(aes(size=TotalPopulation, colour=winner)) +
+    scale_color_manual(values=c('blue', 'red')) +
+    theme_economist() +
+    labs(x='Inverse Simpson Diversity Index', y='Clinton margin (excludes third-parties)',
+         size='County Population (x1000)', colour='Statewide Winner')
+
+}
