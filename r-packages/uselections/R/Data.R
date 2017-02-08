@@ -113,9 +113,10 @@
 
 #' Socio-economic and demographic characteristics of counties
 #'
-#' @format A data frame with 3,141 rows and 53 variables:
+#' @format A data frame with 3,141 rows and 54 variables:
 #' \describe{
-#' \item{County}{2-character FIPS code for the county}
+#' \item{State}{2-character FIPS code for the state}
+#' \item{County}{5-character FIPS code for the county}
 #' \item{MedianHouseholdIncome}{Median Household Income (2015 ACS 5-year estimate)}
 #' \item{TotalPopulation}{Total County Population (2015 ACS 5-year estimate)}
 #' \item{Male}{Total County Male Population (2015 ACS 5-year estimate)}

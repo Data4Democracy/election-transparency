@@ -111,7 +111,8 @@ CountyArea <- getCountyData() %>% mutate(LandAreaSqMiles=(as.numeric(as.characte
 CountyCharacteristics <- loadCountyACSData() %>% full_join(loadCountyBEAData(), by="County") %>%
   inner_join(CountyArea, by=c('County'='GEOID')) %>%
   inner_join(loadCountyBLSData(), by='County') %>%
-  left_join(loadCountyCDCData(), by='County')
+  left_join(loadCountyCDCData(), by='County') %>%
+  mutate(State=substr(County, 1, 2))
 
 AlaskaPrecinctBoroughMapping <- getAlaskaPrecinctCountyMapping()
 
