@@ -146,7 +146,7 @@ To access the CountyCharacteristics data frame that is exposed by the package:
 
 ```
 > uselections::CountyCharacteristics
-# A tibble: 3,141 × 58
+# A tibble: 3,141 × 59
    County MedianHouseholdIncome TotalPopulation  Male Female Age0_4 Age5_9 Age10_14 Age15_19 Age20_24 Age25_34 Age35_44 Age45_54
     <chr>                 <int>           <int> <int>  <int>  <int>  <int>    <int>    <int>    <int>    <int>    <int>    <int>
 1   01001                 51281           55221 26745  28476   3242   3890     4314     4034     3422     6724     7716     8173
@@ -166,12 +166,13 @@ To access the CountyCharacteristics data frame that is exposed by the package:
 #   Married <int>, Widowed <int>, Divorced <int>, Separated <int>, NeverMarried <int>, MfgEmp1970 <int>, MfgEmp1980 <int>,
 #   MfgEmp1990 <int>, MfgEmp2001 <int>, MfgEmp2015 <int>, TotalEmp1970 <int>, TotalEmp1980 <int>, TotalEmp1990 <int>,
 #   TotalEmp2001 <int>, TotalEmp2015 <int>, LandAreaSqMiles <dbl>, Employment <dbl>, LaborForce <dbl>, Unemployment <dbl>,
-#   NCHS_UrbanRural2013 <chr>, NCHS_UrbanRural2006 <chr>, NCHS_UrbanRural1990 <chr>
+#   NCHS_UrbanRural2013 <chr>, NCHS_UrbanRural2006 <chr>, NCHS_UrbanRural1990 <chr>, State <chr>
 >```
 
 For detailed documentation on the data frame:  `?uselections::CountyCharacteristics`.  In short:
 
-* County = 2-character FIPS code for the county
+* State = 2-character FIPS code for the state
+* County = 5-character FIPS code for the county
 * MedianHouseholdIncome = Median Household Income (2015 ACS 5-year estimate)
 * TotalPopulation = Total County Population (2015 ACS 5-year estimate)
 * Male = Total County Male Population (2015 ACS 5-year estimate)
