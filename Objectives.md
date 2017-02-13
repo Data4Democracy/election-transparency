@@ -75,3 +75,27 @@ county-level Presidential election results in 2016, and also to identify countie
 	* (logistic) D (or R) win ~ ^^^^
 	* Once we get a model with a good fit, look at the residuals and see if that helps identify some anomalies
 * Train various classification models, then look at counties that consistently aren't classified properly
+
+Further modeling ideas for the 2016 results:
+
+* Proportions of registered Democrats and registered Republicans - *however, because not every state allows registration by party, this is tough to include*
+* Total county population
+* Demographics:
+    * Proportion of males
+    * Proportions of children (0-19 years) and older adults (65 years and up)
+    * Proportion of adults never married
+    * Proportion Hispanic
+    * Whether county is majority white, majority black, or no racial majority
+    * Inverse Simpson diversity index
+        * Is effect of diversity index modified by which race is in the majority?
+    * Proportion with less than high school, high school, and more than high school education
+        * This may be modified by proportion of adults never married? Thinking along the lines of farming community with relatively stable family structures and relatively low rates of college education may be different from communities with high proportions of unmarried adults and low rates of college education.
+* Economy
+    * Proportion manufacturing employment, 2015 *(note: it would be really interesting to interact this with proportion manufacturing employment in 2001, but we'd need 2001 population estimates for this)*
+    * Proportion unemployed, 2015 (unemployed / labor force)
+    * Proportion in the labor force *(how much does this correlate with proportions of children, adults, older adults?)*
+    * Median housing costs
+    * Median household income
+* Urban-rural classification scheme, 2013; perhaps interact this with same in 2006 or 1990? How many counties changed?
+* Proportion of adults who voted
+* Proportion of votes for third-party candidates (Stein, Johnson, and other)
