@@ -159,7 +159,7 @@ full data dictionary can be found [here](https://github.com/Data4Democracy/elect
 library(data.world)
 
 ## Set connection (see package README for details: https://github.com/datadotworld/data.world-r)
-conn <- data.world('eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwcm9kLXVzZXItY2xpZW50OnJrYWhuZSIsImlzcyI6ImFnZW50OnJrYWhuZTo6ZjE3NDQzZmUtNWM1Yy00ZDllLTgwMGEtMmUwYjhmNTk4ODc2IiwiaWF0IjoxNDg2NTg4MzgzLCJyb2xlIjpbInVzZXJfYXBpX3dyaXRlIiwidXNlcl9hcGlfcmVhZCJdLCJnZW5lcmFsLXB1cnBvc2UiOnRydWV9.txoXoDeTywrXFO5m1-e_8_G7LBOAxjYwds1c9bxyumli0mT9UH16f5PZZjbDaQr60EinxwpuFVU1s7nzJ0uPxw')
+conn <- data.world()
 
 # ## What data tables are available? (both dplyr and data.world have a query(); must specify)
 # data_list <- data.world::query(conn,
