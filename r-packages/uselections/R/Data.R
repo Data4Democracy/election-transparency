@@ -174,6 +174,15 @@
 #' \item{Separated}{Total separated population (2015 ACS 5-year estimates)}
 #' \item{Divorced}{Total divorced population (2015 ACS 5-year estimates)}
 #' \item{NeverMarried}{Total never-married population (2015 ACS 5-year estimates)}
+#' \item{Uninsured}{Total without health insurance (2015 ACS 5-year estimates)}
+#' \item{ForeignBorn}{Total foreign born population (2015 ACS 5-year estimates)}
+#' \item{NonCitizen}{Total non-citizen population (2015 ACS 5-year estimates)}
+#' \item{Disability}{Total population with disability (2015 ACS 5-year estimates)}
+#' \item{TotalSSI}{Total persons receiving SSI benefits in 2015 (SSI Recipients by State/County)}
+#' \item{AgedSSI}{Total persons receiving SSI aged benefits in 2015 (SSI Recipients by State/County)}
+#' \item{BlindDisabledSSI}{Total persons receiving SSI blind/disabled benefits in 2015 (SSI Recipients by State/County)}
+#' \item{OASDI}{Total persons receiving OASDI benefits in 2015 (SSI Recipients by State/County)}
+#' \item{SSIPayments}{Total SSI payments received in 2015 (SSI Recipients by State/County)}
 #' }
 "CountyCharacteristics"
 

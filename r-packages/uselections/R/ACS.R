@@ -68,7 +68,15 @@ loadCountyACSData <- function() {
     mutate(Married=X6*X4/100, Widowed=X8*X4/100, Divorced=X10*X4/100, Separated=X12*X4/100, NeverMarried=X14*X4/100) %>%
     select(-starts_with('X')) %>% mutate_each("round", -County) %>% mutate_each("as.integer", -County)
 
-  inner_join(medianIncomeDf, populationDf, by="County") %>% inner_join(educationDf, by="County") %>%
-    inner_join(housingCostsDf, by="County") %>% inner_join(maritalStatusDf, by="County")
+  # American Fact Finder: https://factfinder.census.gov/bkmk/table/1.0/en/ACS/15_5YR/S2701/0100000US.05000.003
+  s2701Df <- read_csv('data-raw/ACS_15_5YR_S2701_with_ann.csv', skip=2, col_names=FALSE,
+                      col_types=cols_only(X2=col_character(), X10=col_integer(), X324=col_integer(), X344=col_integer(), X354=col_integer())) %>%
+    rename(County=X2, Uninsured=X10, ForeignBorn=X324, NonCitizen=X344, Disability=X354)
+
+  inner_join(medianIncomeDf, populationDf, by="County") %>%
+    inner_join(educationDf, by="County") %>%
+    inner_join(housingCostsDf, by="County") %>%
+    inner_join(maritalStatusDf, by="County") %>%
+    inner_join(s2701Df, by="County")
 
 }
