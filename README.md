@@ -14,7 +14,7 @@
 
 1. Modeling Presidential Election Outcomes at the county level ([Want to learn more?](https://github.com/Data4Democracy/election-transparency/blob/master/Objectives.md))
 2. The impact of how congressional and legislative districts are drawn ([Want to learn more?](https://github.com/Data4Democracy/election-transparency/tree/master/redistricting))
-3. Collecting and analyzing data on voting accessibility and voting laws
+3. Collecting and analyzing data on voting accessibility and voting laws ([Want to learn more?](https://github.com/Data4Democracy/election-transparency/blob/master/voter-accessibility/README.md))
 4. Collaborating with the OpenElections Project to collect elections data to make them open to the public ([Want to learn more?](https://github.com/Data4Democracy/election-transparency/tree/master/redistricting))
 
 For more on the overall objectives of the group, take a look at our [objectives statement](https://github.com/Data4Democracy/election-transparency/blob/master/Objectives.md).
