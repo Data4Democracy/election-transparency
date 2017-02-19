@@ -124,6 +124,24 @@ county_shape.df <- mutate(county_shape.df, region=paste(NAME,'County'))
 # Function for capitalizing names.
 proper<-function(x) paste0(toupper(substr(x, 1, 1)), tolower(substring(x, 2)))
 
+# Election color shading courtesy of Dave Leip at US Election Atlas
+# http://uselectionatlas.org
+color_function<-function(percent, color){
+  if(color == 'red'){
+    if(percent < .5) '#ff0000'
+    else if(percent < .6) '#9b0000'
+    else if(percent < .7) '#880000'
+    else if(percent < .8) '#c10000'
+    else '#990000'
+  }else if(color == 'blue'){
+    if(percent < .5) '#0000ff'
+    else if(percent < .6) '#00009b'
+    else if(percent < .7) '#000088'
+    else if(percent < .8) '#0000c1'
+    else '#000099'
+  }else 'white'
+}
+
 # DPLYR heavy function for creating table of results in shiny app
 create_result_df <- function(election_select, state_select){
   if(state_select == 'National'){
@@ -169,32 +187,32 @@ create_leaflet <- function(election_select, state_select){
     election$CountyName <- as.factor(as.character(election$CountyName))
     election[is.na(election)] <- 0 # replace na with 0, need to do this for dplyr functions.
     # Copied from above.  Good functional programmers are disappointed.
-    election$winner<-sapply(1:nrow(election), function(i){
-      if(which(election[i,4:length(election)] == max(election[i,4:length(election)])) %>% length() > 1){
-        'Tie'
-      }else names(election[i,4:length(election)])[which(election[i,4:length(election)] == max(election[i,4:length(election)]))] 
-    }) %>% factor()
+        election$winner<-vector(length = length(nrow(election)))
+    election$percent<-vector(length = length(nrow(election)))
+    for(i in 1:nrow(election)){
+      if(which(election[i,4:(length(election)-2)] == max(election[i,4:(length(election)-2)])) %>% length() > 1){
+        election$winner[i]<-'Tie'
+      }else election$winner[i]<- names(election[i,4:(length(election)-2)])[which(election[i,4:(length(election)-2)] == max(election[i,4:(length(election)-2)]))]     
+      election$percent[i]<- max(election[i,4:(length(election)-2)]) / sum(election[i,4:(length(election)-2)])
+    }
+    election$winner<-factor(election$winner)
     shape@data$region <- shape@data$GEOID # region needed for consistency
     shape@data <- left_join(shape@data, election, by=c('region' = 'County'))
     candidates<-names(election)[4:5]
   }
   # GOP is Red, Democrats are Blue.  Why?  No one knows.
   colors<-c('red','blue')
-  # Function for coloring the map.
-  pal <- colorFactor(
-    sapply(levels(shape$winner),function(i){
-      if(i %in% candidates) colors[which(candidates == i)]
-      else 'white'
-    }),
-    levels(shape$winner)
-  )
+  # Coloring the map.
+  shape$color <- sapply(shape$winner, function(i) ifelse(i %in% candidates, colors[which(candidates == i)], 'white'))
+  shape$color <- mapply(color_function, shape$percent, shape$color)
+
   # Create popup label in leaflet.
   pop <- paste0('<strong>',shape$NAME,'</strong><br>',proper(candidates[1]),':', comma_format()(shape[[which(names(shape) == candidates[1])]]),
                 '<br>',proper(candidates[2]),':',comma_format()(shape[[which(names(shape) == candidates[2])]]))
   
   to_return <- leaflet(data = shape) %>% 
     addTiles() %>% 
-    addPolygons(data = shape, stroke = F, smoothFactor=0.2, fillOpacity = 0.75, color=~pal(winner), popup=pop) %>% 
+    addPolygons(data = shape, stroke = F, smoothFactor=0.2, fillOpacity = 0.8, color=shape$color, popup=pop) %>% 
     addPolylines(weight=2, color='black')
   # Set zoom to exclude AK and HI in national map (you can still scroll/zoom to find them.)
   if(state_select == 'National') to_return <- to_return %>% setView(lng = -98.585522, lat = 39.833333, zoom = 3.66) 
