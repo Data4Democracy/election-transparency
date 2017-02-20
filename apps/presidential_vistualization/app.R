@@ -199,7 +199,7 @@ create_leaflet <- function(election_select, state_select){
   # Coloring the map.
   shape$color <- sapply(shape$winner, function(i) ifelse(i %in% candidates, colors[which(candidates == i)], 'white'))
   shape$color <- mapply(color_function, shape$percent, shape$color)
-  
+
   # Create popup label in leaflet.
   pop <- paste0('<strong>',shape$NAME,'</strong><br>',proper(candidates[1]),':', comma_format()(shape[[which(names(shape) == candidates[1])]]),
                 '<br>',proper(candidates[2]),':',comma_format()(shape[[which(names(shape) == candidates[2])]]))
