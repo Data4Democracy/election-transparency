@@ -36,61 +36,9 @@ elections[[4]]$County <- sapply(paste(proper(elections[[4]]$CountyName),proper(e
   FIPS$FIPS[which(i == FIPS$CountyName)[1]]
 })
 
-
-# FIPS headers
-state_table = c(
-  'Alabama' = 01L,
-  'Alaska' = 02L,
-  'Arizona' = 04L,
-  'Arkansas' = 05L,
-  'California' = 06L,
-  'Colorado' = 08L,
-  'Connecticut' = 09L,
-  'Delaware' = 10L,
-  'Florida' = 12L,
-  'Georgia' = 13L,
-  'Hawaii' = 15L,
-  'Idaho' = 16L,
-  'Illinois' = 17L,
-  'Indiana' = 18L,
-  'Iowa' = 19L,
-  'Kansas' = 20L,
-  'Kentucky' = 21L,
-  'Louisiana' = 22L,
-  'Maine' = 23L,
-  'Maryland' = 24L,
-  'Massachusetts' = 25L,
-  'Michigan' = 26L,
-  'Minnesota' = 27L,
-  'Mississippi' = 28L,
-  'Missouri' = 29L,
-  'Montana' = 30L,
-  'Nebraska' = 31L,
-  'Nevada' = 32L,
-  'New Hampshire' = 33L,
-  'New Jersey' = 34L,
-  'New Mexico' = 35L,
-  'New York' = 36L,
-  'North Carolina' = 37L,
-  'North Dakota' = 38L,
-  'Ohio' = 39L,
-  'Oklahoma' = 40L,
-  'Oregon' = 41L,
-  'Pennsylvania' = 42L,
-  'Rhode Island' = 44L,
-  'South Carolina' = 45L,
-  'South Dakota' = 46L,
-  'Tennessee' = 47L,
-  'Texas' = 48L,
-  'Utah' = 49L,
-  'Vermont' = 50L,
-  'Virginia' = 51L,
-  'Washington' = 53L,
-  'West Virginia' = 54L,
-  'Wisconsin' = 55L,
-  'Wyoming' = 56L,
-  'District of Columbia' = 11L
-)
+statesDf <- read_csv('https://query.data.world/s/863x2al2iemb7w983tk0ejtjs')
+state_table <- as.integer(statesDf$State)
+names(state_table) <- statesDf$StateName
 
 # Vector used for select box in Shiny App
 election_names <- c(
