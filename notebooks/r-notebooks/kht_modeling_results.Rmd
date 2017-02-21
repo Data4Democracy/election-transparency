@@ -1,0 +1,284 @@
+---
+title: "Initial modeling of the 2016 election results"
+output:
+  html_document: default
+---
+
+# Setup
+
+This is a first attempt to gain some insight into the 2016 election with modeling. Many thanks to [jenniferthompson](https://datafordemocracy.slack.com/team/jenniferthompson) for her excellent work compiling the data and spelling out some questions worth answering about it - this is just a first crack at following next steps she spelled out.
+
+## Loading data and feature engineering
+
+First I'll just rerun most of [jenniferthompson](https://datafordemocracy.slack.com/team/jenniferthompson)'s work from [her notebook](./model_2016_presresults.nb.html) to get us up to speed and put the input data in our hand. If you want to know details about these steps please check out her notebook.
+
+```{r setup, message = FALSE, warning = FALSE}
+library(data.world)
+library(tidyverse)
+library(modelr) # Nice functions for getting predictions/residuals from models
+library(broom) # Nice functions for evaluating models
+library(caret) # Convenient cross-validation functionality and a lot else that I don't know how to use
+library(randomForest) # When you don't know where to start, start with RF!
+library(choroplethr) # Pretty maps - thanks @scottcame!
+library(rpart) # If RF works, make an rpart tree to show dumb rules
+library(rpart.plot) # Visualization
+set.seed(8675309)
+
+## Get data from data.world
+conn <- data.world()
+countyChar <- data.world::query(conn,
+                                dataset = 'data4democracy/election-transparency',
+                                query = "SELECT * FROM CountyCharacteristics")
+voterReg2016 <- data.world::query(conn,
+                                  dataset = 'data4democracy/election-transparency',
+                                  query = "SELECT * FROM PartyRegistration WHERE Year = 2016 AND Month = 11")
+presResults2016 <- data.world::query(conn,
+                                     dataset = 'data4democracy/election-transparency',
+                                     query = "SELECT * FROM PresidentialElectionResults2016")
+
+## Prep tables and join them
+voterReg2016 <- voterReg2016 %>%
+  select(-one_of("CountyName", "StateName", "StateAbbr", "Year", "Month", "YearMonth"))
+names(voterReg2016) <- ifelse(names(voterReg2016) %in% c('State', 'County'), names(voterReg2016),
+                              paste0(names(voterReg2016), 'Reg'))
+data2016 <- reduce(list(countyChar, voterReg2016, presResults2016),
+                   left_join,
+                   by = c('County', 'State'))
+
+## @jenniferthompson's feature engineering
+prop_total <- function(x){ x / data2016$TotalPopulation }
+data2016 <- data2016 %>%
+  mutate(propMale = prop_total(Male),
+         propKids = prop_total(Age0_4 + Age5_9 + Age10_14 + Age15_19),
+         propAdultsNoTeens = 1 - propKids,
+         totalAdultsWithTeens = Age15_19 + Age20_24 + Age25_34 + Age35_44 + Age45_54 + Age55_59 +
+           Age60_64 + Age65_74 + Age75_84 + Age85,
+         propAdultsWithTeens = prop_total(totalAdultsWithTeens),
+         totalAdultsNoTeens = Age20_24 + Age25_34 + Age35_44 + Age45_54 + Age55_59 + Age60_64 +
+           Age65_74 + Age75_84 + Age85,
+         propElders = prop_total(Age65_74 + Age75_84 + Age85),
+         propNMarried = NeverMarried / totalAdultsWithTeens,
+         propHispanic = prop_total(Hispanic),
+         propWhite = prop_total(White),
+         propBlack = prop_total(Black),
+         majWhite = propWhite > 0.5,
+         majBlack = propBlack > 0.5,
+         propNoHS = (EdK8 + Ed9_12) / totalAdultsNoTeens,
+         propHS = EdHS / totalAdultsNoTeens,
+         propMoreHS = (EdCollNoDegree + EdAssocDegree + EdBachelorDegree + EdGraduateDegree) /
+           totalAdultsNoTeens,
+         propMfg2015 = MfgEmp2015 / LaborForce,
+         propUnemp = Unemployment / LaborForce,
+         propLaborForce = prop_total(LaborForce),
+         propStein = stein / totalvotes,
+         propJohnson = johnson / totalvotes,
+         propVoters = totalvotes / totalAdultsNoTeens)
+```
+
+I'm doing this work the evening of 2/20 - since [jenniferthompson](https://datafordemocracy.slack.com/team/jenniferthompson)'s [most recent commit on 2/12](https://github.com/Data4Democracy/election-transparency/commit/ef6b6047712ed0b3d29131b27a066e367ea8c54a), additional interesting demographic variables have been added to the `countyChar` table by [scottcame](https://datafordemocracy.slack.com/team/scottcame). Let's engineer new proportional features based on those.
+
+```{r mfg_prop}
+data2016 <- data2016 %>%
+    mutate(propUninsured = prop_total(Uninsured),
+           propForeignBorn = prop_total(ForeignBorn),
+           propNonCitizen = prop_total(NonCitizen),
+           propDisability = prop_total(Disability),
+           propTotalSSI = prop_total(TotalSSI),
+           propAgedSSI = prop_total(AgedSSI),
+           propBlindDisabledSSI = prop_total(BlindDisabledSSI),
+           propOASDI = prop_total(OASDI),
+           propMfg1970 = MfgEmp1970 / TotalEmp1970,
+           propMfg1980 = MfgEmp1980 / TotalEmp1980,
+           propMfg1990 = MfgEmp1990 / TotalEmp1990,
+           propMfg2001 = MfgEmp2001 / TotalEmp2001)
+```
+
+# Modeling
+
+## Investigating feature importance with randomForest
+
+We're starting out with a big dataframe with >100 predictor variables, so we should probably try and simplify this down a bit to find the really informative ones. When faced with a big problem like this, I like to start with random forests. They're fast, they're pretty good models for most problems, they're robust to overfitting and pretty robust against uninformative features. This approach may be a bit simplistic for a problem like this with relatively few predictors with a lot of domain knowledge and background behind them - in my 9-5 as a computational biologist I am usually starting with a dataframe with 1000's of features (genes), many of which have absolutely no predictive power at all, and RF usually helps me hack away 90% or more of them so I can start to make sense of my data. In this case, let's just give it a shot!
+
+```{r big_rf_look}
+# Take a look at our data
+data2016
+```
+
+First let's clean this up a bit - remove rows with `NA`s (for now) and keep the proportional derivatives of our population variables (if we're going to be modeling proportion of voters it makes sense to be looking at proportional features - except for TotalPopulation). Lastly, we're going to be predicting `rDRPct`, which is (Trump / (Trump + Clinton)); essentially the two-party heads-up proportional vote, since none of the other candidates got close to winning electoral college votes (sorry Evan McMullin!)
+
+```{r big_rf}
+for_big_rf <- data2016 %>%
+  select(rDRPct, County, # Objective function and an index for joining later
+         MedianHouseholdIncome, TotalPopulation, MedianAge, LandAreaSqMiles, # Big dumb basic stats
+         propMale, propKids, propAdultsNoTeens, propNMarried, propForeignBorn, propNonCitizen, # Demography
+         propHispanic, propWhite, propBlack, majWhite, majBlack, SimpsonDiversityIndex, # Racial demography
+         propNoHS, propHS, propMoreHS, # Education
+         propMfg1970, propMfg1980, propMfg1990, propMfg2001, propMfg2015, propUnemp, propLaborForce, # Labor
+         propVoters, propJohnson, propStein, # Political (avoiding registration b/c of partyless reg. issue)
+         MedianHousingCosts, MedianHouseholdIncome, propUninsured, # Financial
+         propDisability, propTotalSSI, propAgedSSI, propBlindDisabledSSI, propOASDI, # SSI recipients
+         NCHS_UrbanRural1990, NCHS_UrbanRural2006, NCHS_UrbanRural2013) %>% # Area classifications
+  # RF can't handle strings
+  mutate(NCHS_UrbanRural1990 = factor(NCHS_UrbanRural1990),
+         NCHS_UrbanRural2006 = factor(NCHS_UrbanRural2006),
+         NCHS_UrbanRural2013 = factor(NCHS_UrbanRural2013),
+         propStein = ifelse(is.na(propStein), 0, propStein)) %>% # Where Stein wasn't on the ballot, we'll fill in 0
+  # Can't handle NA either
+  filter(!is.na(MedianHouseholdIncome), !is.na(propTotalSSI), !is.na(propAgedSSI), !is.na(propBlindDisabledSSI), !is.na(propOASDI),
+         !is.na(propMfg1970), !is.na(propMfg1980), !is.na(propMfg1990), !is.na(propMfg2001), !is.na(propMfg2015),
+         !is.na(NCHS_UrbanRural1990), !is.na(NCHS_UrbanRural2013), !is.na(NCHS_UrbanRural2006))
+
+# This results in the loss of 815 of 3,141 counties because of missing data. Not good but maybe we can get some of those back if we can show that the missing variables aren't predictive.
+
+# Train/test split
+trIndex <- createDataPartition(for_big_rf$rDRPct, p = 0.8, list = F)
+tr <- select(for_big_rf, -County)[trIndex,]
+te <- select(for_big_rf, -County)[-trIndex,]
+
+# Train our RF
+big_rf <- randomForest(rDRPct ~ ., tr)
+
+# How's it perform? Looking at MSE here
+big_rf
+
+# Visualize predictions
+for_big_rf$training <- FALSE
+for_big_rf$training[trIndex] <- TRUE
+for_big_rf %>% add_predictions(big_rf) %>% qplot(pred, rDRPct, color = training, data = .)
+```
+
+Really not terrible! A bit of overfitting but for the most part pretty good. I'm not surprised at the overfitting given how idiosyncratic different parts of the US are. So we've got a model that predicts pretty well - what predictors are most important?
+
+```{r big_rf_importance}
+varImpPlot(big_rf)
+```
+
+OK, a lot to unpack here. First it looks like our manufacturing sector employment proportional variables don't rank highly. It might be worth looking into whether the *decline* in manufacturing sector employment impacts the model more, to see if the data jive with the media narrative about disaffected Rust Belt workers driving the election result.
+
+However, as an aside, it's worth thinking about what exactly we want to model here. Even if it turns out that being in a Southern state is the strongest predictor of whether or not a county went for Trump, big whoop - it was likely also the strongest predictor of whether it went for Romney, or McCain, or Bush, and so on. Are we trying to define the factors that made any given county in the US more likely to go Trump? The factors that make a county most likely to flip from 2008/2012 to 2016? We should think about this a bit. For now though I'll keep forging ahead with predicting results country-wide because it's such a nice dataset for this and we've got a strong signal from our random forest.
+
+## First-order predictors
+
+### Proportion of unmarried adults
+
+Anyway, other things to look at are that propNMarried, PropWhite, propStein, and totalPopulation clearly have something going on. Let's visualize a bit to see if we can find relationships. In the following dotplots, every dot is a county, and for the most part I'll show various features from the data on the x axis and the objective function (percent of two-party vote for Trump) on the y.
+
+```{r propNMarried_plot}
+qplot(propNMarried, rDRPct, data = data2016)
+```
+
+Um, yep, that's a relationship. Is it obvious on a map what's going on here?
+
+```{r propNMarried_choropleth, warning = FALSE, message = FALSE}
+county_choropleth(data2016 %>% mutate(region = as.double(County), value = propNMarried*100) %>%
+                    select(region, value), "Percent of Adult Population Unmarried", "Pct. unmarried")
+
+## Cmp to our objective - heads-up Trump fraction
+county_choropleth(data2016 %>% mutate(region = as.double(County), value = rDRPct*100) %>%
+                    select(region, value), "Percent of Two-Party Votes for Trump", "Pct. Trump")
+
+```
+
+Really striking. It looks like a big band from Appalachia, through the Southern part of the Midwest, and out into the Great Plains has an extremely low percentage of the adult population that is unmarried, and that this band corresponds very well to a band of Trump support. It's also very striking to compare that to this figure I found online from the Bureau of Economic Analysis:
+
+<center><img src="https://www.bea.gov/newsreleases/regional/gdp_state/2012/_images/gsp_0612.png"></center>
+
+In future work, it might be worth looking at GDP and some other economic measures, and their change over time, in these models.
+
+### Proportion white, total population, education level, and housing costs
+
+This shouldn't surprise anybody in the aftermath of the Trump campaign: the fraction of a county's population that is white is a strong predictor of whether that county went for Trump. Let's take a look.
+
+```{r propWhite_plot}
+qplot(propWhite, rDRPct, data = data2016)
+```
+
+There you have it - the whiter a county is, the more it went for Trump. Not necessarily as a rule, but that upper right is awfully busy - let's call that the Richard Spencer Zone and then let's never go there. Total population also came out as a strong predictor - but in what direction?
+
+```{r totalPopulation_plot}
+qplot(TotalPopulation, rDRPct, data = data2016) +
+  scale_x_log10(labels = scales::comma) +
+  annotation_logticks(sides = "b")
+```
+
+More populous counties tended to go less for Trump, which should sound familiar to anybody who watched election night returns. Some education variables came out too. In this plot, I'll show percent two-party vote for Trump as color, and put the two education level fractions on the axes.
+
+```{r education_plot}
+qplot(propHS, propMoreHS, color = rDRPct, data = data2016) +
+  scale_color_distiller(palette = "RdBu") + theme_dark()
+```
+
+Counties where more people have beyond a high-school education tended to go less for Trump. Finally, we had some signal from median housing costs:
+
+```{r housing_costs_plot}
+qplot(MedianHousingCosts, rDRPct, data = data2016)
+```
+
+Looks like we're starting to get to variables where the signal is a bit messier, but there's still a trend for more expensive places to live going more for Clinton. So all of these first order interactions (as well as the glimpse of that BEA data I linked) tell us a story: _In economically depressed, less populated, less educated, less expensive, highly white counties with a small fraction of unmarried adults, Trump did very well._
+
+## Interacting predictors
+
+### Support for Jill Stein
+
+We also saw that support for Jill Stein had a sizable impact on the model - how does that look when plotted?
+
+```{r propStein_plot, warning = F}
+qplot(propStein, rDRPct, data = data2016)
+```
+
+Well there's not anything really obvious going on with Stein support in isolation - could her signal be part of an interaction? Let's visualize an rpart tree to see if we can't figure out where it might be interacting.
+
+```{r rpart}
+rp <- rpart(rDRPct ~ ., tr)
+prp(rp)
+```
+
+How you read this is like a decision tree (since it is a decision tree!) - start at the top and ask yourself the first question: are >= 29% of adults unmarried in this county? If yes, go left. Then follow all the way down to the terminal nodes, where the value listed is the expected rDRPct (percent of two-party voters that went for Trump). So every decision node you follow that takes you to the left makes that county more likely to vote Trump. For Stein, this means generally that higher support for Stein in a county means that county is less likely to go Trump - but only after you go through propNMarried, propWhite, TotalPopulation, and MedianHousingCosts. Let's visualize some of those interactions. To visualize this, I'll show some of those same plots as before, but this time coloring counties by support for Jill Stein.
+
+#### White fraction of population
+
+```{r stein_propwhite}
+data2016 %>% filter(!is.na(propStein)) %>% 
+  qplot(propWhite, rDRPct, color = propStein, data = .) +
+  scale_color_gradientn(colors = c("#e5f5e0", "#a1d99b", "#31a354", "#31a354"),
+                        values = scales::rescale(c(0, 0.025, 0.05, 0.105))) + theme_dark()
+```
+
+This one's interesting - it looks like Jill Stein's performance in a county is a somewhat effective way to tease out differences among highly-white counties. Does it perform similarly for those other predictor variables?
+
+#### Proportion of adults unmarried
+
+```{r stein_propNMarried}
+data2016 %>% filter(!is.na(propStein)) %>% 
+  qplot(propNMarried, rDRPct, color = propStein, data = .) + 
+  scale_color_gradientn(colors = c("#e5f5e0", "#a1d99b", "#31a354", "#31a354"),
+                        values = scales::rescale(c(0, 0.025, 0.05, 0.105))) + theme_dark()
+```
+
+Sort of, in the higher range of that distribution.
+
+#### Total population
+
+```{r stein_TotalPopulation}
+data2016 %>% filter(!is.na(propStein)) %>% 
+  qplot(TotalPopulation, rDRPct, color = propStein, data = .) + scale_x_log10() +
+  scale_color_gradientn(colors = c("#e5f5e0", "#a1d99b", "#31a354", "#31a354"),
+                        values = scales::rescale(c(0, 0.025, 0.05, 0.105))) + theme_dark()
+```
+
+Sort of, in the mid- to high-population counties.
+
+#### Housing costs
+
+```{r stein_housingcosts}
+data2016 %>% filter(!is.na(propStein)) %>% 
+  qplot(MedianHousingCosts, rDRPct, color = propStein, data = .) +
+  scale_color_gradientn(colors = c("#e5f5e0", "#a1d99b", "#31a354", "#31a354"),
+                        values = scales::rescale(c(0, 0.025, 0.05, 0.105))) + theme_dark()
+```
+
+Also sort of, especially as you get more expensive. So generally it looks like measuring support for Jill Stein is a good way to nudge an uncertain prediction about a county that already seems like a Clinton county. It's interesting that support for Gary Johnson didn't pan out in a similar way - perhaps because he was drawing support from a broader swath of the political spectrum than Jill Stein (citation needed).
+
+# Conclusions (for now)
+
+So with one dumb model, we were able to figure out some key predictors of a county's two-party vote margin going for Trump. I would be interested to see how a model containing *just* those predictors does, and if there's not much of a penalty for removing a huge number of our predictors, then try and do some linear or nonlinear modeling with the `glm` package to really quantify effects of certain terms (including interaction terms). As mentioned earlier, I'd be interested in also engineering some features about the change of certain key metrics over time (GDP, % workforce in manufacturing, etc). Finally, I have been thinking about next steps for this work more generally - let's say we build an awesome model that predicts the election really well and get a great understanding of the impact of certain key metrics on the election outcome. What's next? Do we want to do the same for previous elections to investigate just how unusual this election was? Or perhaps, do we want to try and project out to the 2020 election? President Trump seems to be thinking about it already, why can't we? :)
