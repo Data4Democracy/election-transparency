@@ -1,0 +1,601 @@
+---
+title: "Visualizing and Modeling 2016 US Presidential Election Results"
+output:
+  html_document:
+    toc: yes
+    toc_depth: '4'
+  html_notebook:
+    theme: yeti
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+---
+This data setup stolen brazenly from Jennifer Thompson.
+```{r setup}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+## Load libraries we'll use
+# library(devtools)
+# install_github('datadotworld/data.world-r')
+library(data.world) ## for querying directly from data.world
+library(tidyverse)  ## for data wrangling and piping
+library(rms)        ## rms has nice functionality for getting predicted values from model objects
+library(reshape2)   ## I know this better than tidyr -@rkahne
+
+state_names = c(
+'Alabama' = 01L,
+'Alaska' = 02L,
+'Arizona' = 04L,
+'Arkansas' = 05L,
+'California' = 06L,
+'Colorado' = 08L,
+'Connecticut' = 09L,
+'Delaware' = 10L,
+'Florida' = 12L,
+'Georgia' = 13L,
+'Hawaii' = 15L,
+'Idaho' = 16L,
+'Illinois' = 17L,
+'Indiana' = 18L,
+'Iowa' = 19L,
+'Kansas' = 20L,
+'Kentucky' = 21L,
+'Louisiana' = 22L,
+'Maine' = 23L,
+'Maryland' = 24L,
+'Massachusetts' = 25L,
+'Michigan' = 26L,
+'Minnesota' = 27L,
+'Mississippi' = 28L,
+'Missouri' = 29L,
+'Montana' = 30L,
+'Nebraska' = 31L,
+'Nevada' = 32L,
+'New Hampshire' = 33L,
+'New Jersey' = 34L,
+'New Mexico' = 35L,
+'New York' = 36L,
+'North Carolina' = 37L,
+'North Dakota' = 38L,
+'Ohio' = 39L,
+'Oklahoma' = 40L,
+'Oregon' = 41L,
+'Pennsylvania' = 42L,
+'Rhode Island' = 44L,
+'South Carolina' = 45L,
+'South Dakota' = 46L,
+'Tennessee' = 47L,
+'Texas' = 48L,
+'Utah' = 49L,
+'Vermont' = 50L,
+'Virginia' = 51L,
+'Washington' = 53L,
+'West Virginia' = 54L,
+'Wisconsin' = 55L,
+'Wyoming' = 56L,
+'District of Columbia' = 11L
+)
+
+electoral_votes = c(
+'Alabama' = 9,
+'Alaska' = 3L,
+'Arizona' = 11,
+'Arkansas' = 6,
+'California' = 55L,
+'Colorado' = 9,
+'Connecticut' = 7,
+'Delaware' = 3,
+'Florida' = 29,
+'Georgia' = 16,
+'Hawaii' = 4,
+'Idaho' = 4,
+'Illinois' = 20,
+'Indiana' = 11,
+'Iowa' = 6,
+'Kansas' = 6,
+'Kentucky' = 8,
+'Louisiana' = 8,
+'Maine' = 4,
+'Maryland' = 10,
+'Massachusetts' = 11,
+'Michigan' = 16,
+'Minnesota' = 10,
+'Mississippi' = 6,
+'Missouri' = 10,
+'Montana' = 3,
+'Nebraska' = 5,
+'Nevada' = 6,
+'New Hampshire' = 4,
+'New Jersey' = 14,
+'New Mexico' = 5,
+'New York' = 29,
+'North Carolina' = 15,
+'North Dakota' = 3,
+'Ohio' = 18,
+'Oklahoma' = 7,
+'Oregon' = 7,
+'Pennsylvania' = 20,
+'Rhode Island' = 4,
+'South Carolina' = 9,
+'South Dakota' = 3,
+'Tennessee' = 11,
+'Texas' = 38,
+'Utah' = 6,
+'Vermont' = 3,
+'Virginia' = 13,
+'Washington' = 12,
+'West Virginia' = 5,
+'Wisconsin' = 10,
+'Wyoming' = 3,
+'District of Columbia' = 3
+)
+
+elections <-list(
+  'Election_2000' = read_csv('https://query.data.world/s/404aq0u4n98hmozughp08npg1') %>% select(County, CountyName, StateName, bush, gore, nader, browne, other),
+  'Election_2004' = read_csv('https://query.data.world/s/6mr92w4p92rem4bpbs1ggzcui') %>% select(County, CountyName, StateName, bush, kerry, other),
+  'Election_2008' = read_csv('https://query.data.world/s/8pz64y5pglv8dt6umysffgahh') %>% select(County, CountyName, StateName, mccain, obama, other),
+  'Election_2012' = read_csv('https://query.data.world/s/29sed01wkb9ljmgg0kgj3ztop') %>% select(County, CountyName, StateName, romney, obama, johnson, stein, other),
+  'Election_2016' = read_csv('https://query.data.world/s/dmjcapenh4fg8y7chl5oqgjto') %>% select(County, CountyName, StateName, trump, clinton, johnson, stein, other)
+)
+elections[[1]]$County <- as.integer(elections[[1]]$County)
+
+```
+
+We want to determine what county characteristics may be predictors of both the county's final winner
+in the 2016 presidential election, and the margin of victory by which that candidate won.
+
+# Project Setup
+
+## Loading Data
+
+We'll load the county characteristics and 2016 presidential election results datasets directly from data.world.
+
+### County Characteristics
+
+These data are mostly from the 2015 [American Community Survey](https://www.census.gov/programs-surveys/acs/), with additional data from other sources. A
+full data dictionary can be found [here](https://github.com/Data4Democracy/election-transparency/blob/master/data-dictionary/county-level/CountyCharacteristics.md).
+
+```{r load_county_data}
+library(data.world)
+
+## Set connection (see package README for details: https://github.com/datadotworld/data.world-r)
+conn <- data.world()
+
+# ## What data tables are available? (both dplyr and data.world have a query(); must specify)
+# data_list <- data.world::query(conn,
+#                                dataset = 'data4democracy/election-transparency',
+#                                query = "SELECT * FROM Tables")
+# data_list
+
+countyChar <- data.world::query(conn,
+                                dataset = 'data4democracy/election-transparency',
+                                query = "SELECT * FROM CountyCharacteristics")
+
+```
+
+### Voter Registration
+
+We also want party registration data from November 2016, queried from the full `PartyRegistration`
+file. This file includes data pulled from each state's Secretary of State web site. Full data
+dictionary is [here](https://github.com/Data4Democracy/election-transparency/blob/master/data-dictionary/county-level/PartyRegistration.md).
+
+Some of the variable names overlap with names in the next dataset; we'll drop variables that are
+redundant (state/county names/abbreviations and year/month of registration) and add "Reg" to
+everything else except state/county keys to clarify that it's registration info.
+
+```{r load_registration_data}
+voterReg2016 <-
+  data.world::query(conn,
+                    dataset = 'data4democracy/election-transparency',
+                    query = "SELECT * FROM PartyRegistration WHERE Year = 2016 AND Month = 11")
+
+voterReg2016 <- voterReg2016 %>%
+  select(-one_of("CountyName", "StateName", "StateAbbr", "Year", "Month", "YearMonth"))
+
+names(voterReg2016) <- ifelse(names(voterReg2016) %in% c('State', 'County'), names(voterReg2016),
+                              paste0(names(voterReg2016), 'Reg'))
+
+```
+
+### Presidential Election Results by County
+
+These data are collected from a Harvard research project. A full data dictionary can be found [here](https://github.com/Data4Democracy/election-transparency/blob/master/data-dictionary/county-level/PresidentialElectionResults2016.md).
+
+```{r load_results_data}
+presResults2016 <- data.world::query(conn,
+                                     dataset = 'data4democracy/election-transparency',
+                                     query = "SELECT * FROM PresidentialElectionResults2016")
+
+```
+
+## Descriptive Statistics
+
+Let's join the datasets, calculate some proportions, and look at some basic descriptive statistics.
+
+```{r join_data}
+## Check what variables are in common
+# intersect(names(countyChar), names(voterReg2016))
+# intersect(names(countyChar), names(presResults2016))
+
+data2016 <- reduce(list(countyChar, voterReg2016, presResults2016),
+                   left_join,
+                   by = c('County', 'State'))
+
+## Function to quickly calculate a proportion out of TotalPopulation - we'll need to do this a lot
+prop_total <- function(x){ x / data2016$TotalPopulation }
+
+data2016 <- data2016 %>%
+  ## Calculate lots of proportion variables
+  mutate(propMale = prop_total(Male),
+         propKids = prop_total(Age0_4 + Age5_9 + Age10_14 + Age15_19),
+         propAdultsNoTeens = 1 - propKids,
+         ## 15-19 is included in labor force, marital status questions
+         totalAdultsWithTeens = Age15_19 + Age20_24 + Age25_34 + Age35_44 + Age45_54 + Age55_59 +
+           Age60_64 + Age65_74 + Age75_84 + Age85,
+         propAdultsWithTeens = prop_total(totalAdultsWithTeens),
+         ## Only >18 included in education questions
+         totalAdultsNoTeens = Age20_24 + Age25_34 + Age35_44 + Age45_54 + Age55_59 + Age60_64 +
+           Age65_74 + Age75_84 + Age85,
+         propElders = prop_total(Age65_74 + Age75_84 + Age85),
+         propNMarried = NeverMarried / totalAdultsWithTeens,
+         propHispanic = prop_total(Hispanic),
+         propWhite = prop_total(White),
+         propBlack = prop_total(Black),
+         majWhite = propWhite > 0.5,
+         majBlack = propBlack > 0.5,
+         propNoHS = (EdK8 + Ed9_12) / totalAdultsNoTeens,
+         propHS = EdHS / totalAdultsNoTeens,
+         propMoreHS = (EdCollNoDegree + EdAssocDegree + EdBachelorDegree + EdGraduateDegree) /
+           totalAdultsNoTeens,
+         propMfg2015 = MfgEmp2015 / LaborForce,
+         propUnemp = Unemployment / LaborForce,
+         propLaborForce = prop_total(LaborForce),
+         propStein = stein / totalvotes,
+         propJohnson = johnson / totalvotes,
+         propTrump = trump / totalvotes,
+         propClinton = clinton / totalvotes,
+         propVoters = totalvotes / totalAdultsNoTeens,
+         votedTrump = rPct > 0.5,
+         state_EV = electoral_votes[StateName])
+## View full data frame
+data2016
+
+```
+## Visualizations!
+* I made some small modifications to the code above, which mostly turned out to be useless, anyway.
+* I (rkahne) really started doing work around here.
+* The goal (for me, right now) is to build out dataframes from the great work done by Jennifer Thompson that can be used with ggplot.
+* I've done some Very Basic Barplots to get started.  I hope other people can take this stuff, modify it, and find some cool and interesting stuff in here.
+
+###Candidate vote totals by State
+```{r}
+vote_by_state<-select(data2016, StateName, state_EV, clinton, trump, johnson, stein, other) %>% 
+  melt(id= c('StateName','state_EV')) %>% 
+  group_by(StateName, state_EV, variable) %>% 
+  dplyr::summarize(total_vote = sum(value)) %>% # Dunno how plyr got in, but whatever.
+  complete(variable) %>%
+  ungroup() %>% 
+  group_by(StateName) %>% 
+  mutate(sum_total = sum(total_vote, na.rm=T)) %>% 
+  mutate(proportion = ifelse(is.na(total_vote),NA,paste0(round(total_vote / sum_total, 4)*100,'%')),
+         proportion_numeric = total_vote / sum_total) %>%
+  select(-sum_total)
+
+candidate_order <- 'clinton' # CHANGE ME
+
+level_order<-(filter(vote_by_state,variable == candidate_order) %>% 
+                     select(StateName, proportion_numeric) %>% 
+                     arrange(desc(proportion_numeric)))$StateName 
+
+vote_by_state$StateName<- factor(vote_by_state$StateName, levels = level_order)
+vote_by_state$variable<-factor(vote_by_state$variable, levels = c('other','stein','johnson','trump','clinton'))
+
+ggplot(vote_by_state, aes(x=StateName, y=total_vote, fill=variable)) + 
+  geom_bar(stat='identity', position = 'fill') +
+  scale_fill_manual(values = c('clinton' = 'blue', 'trump' = 'red', 'stein' = 'green','johnson' = 'yellow','other' = 'purple'), 
+                    name = 'Candidate',
+                    breaks = c('other','stein','johnson','trump','clinton'),
+                    labels = c('Others','Jill Stein','Gary Johnson','Donald J Trump','Hillary Clinton')) +
+  labs(x = NULL, y = 'Percent of Vote')+
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle('Percent of Vote by State', subtitle='2016 USA Presidential Election') +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+### Candidate Vote Totals by County Within State
+Feel free to play with the variable in this chunk.
+```{r}
+state<-'Tennessee'
+
+vote_by_county<-filter(data2016, StateName == state) %>% 
+  select(CountyName, clinton, trump, johnson, stein, other) %>% 
+  melt(id= 'CountyName') %>% 
+  group_by(CountyName, variable) %>% 
+  dplyr::summarize(total_vote = sum(value)) %>% # Dunno how plyr got in, but whatever.
+  complete(variable) %>%
+  ungroup() %>% 
+  group_by(CountyName) %>% 
+  mutate(sum_total = sum(total_vote, na.rm=T)) %>% 
+  mutate(proportion = ifelse(is.na(total_vote),NA,paste0(round(total_vote / sum_total, 4)*100,'%')),
+         proportion_numeric = total_vote / sum_total) %>%
+  select(-sum_total)
+
+candidate_order <- 'clinton' # CHANGE ME
+
+level_order<-(filter(vote_by_county,variable == candidate_order) %>% 
+                     select(CountyName, proportion_numeric) %>% 
+                     arrange(desc(proportion_numeric)))$CountyName 
+
+vote_by_county$CountyName<- factor(vote_by_county$CountyName, levels = level_order)
+vote_by_county$variable<-factor(vote_by_county$variable, levels = c('other','stein','johnson','trump','clinton'))
+
+ggplot(vote_by_county, aes(x=CountyName, y=total_vote, fill=variable)) + 
+  geom_bar(stat='identity', position = 'fill') +
+  scale_fill_manual(values = c('clinton' = 'blue', 'trump' = 'red', 'stein' = 'green','johnson' = 'yellow','other' = 'purple'), 
+                    name = 'Candidate',
+                    breaks = c('other','stein','johnson','trump','clinton'),
+                    labels = c('Others','Jill Stein','Gary Johnson','Donald J Trump','Hillary Clinton')) +
+  labs(x = NULL, y = 'Percent of Vote')+
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle(paste0('Percent of Vote by County - ',state), subtitle='2016 USA Presidential Election') +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+###Ternary Plot
+* Let's try something crazy?!
+* Here's an interesting idea for looking at the county by county results.
+    + Utah had a high vote total for Evan McMillin, and this is a way to visualize Utah's uniqueness.
+```{r}
+library(ggtern)
+
+ternary_vote<-mutate(data2016, third_party = johnson + stein + other) %>% 
+  select(County, StateName, clinton, trump, third_party) %>% 
+  melt(id= c('County','StateName')) %>% 
+  group_by(County, StateName, variable) %>% 
+  dplyr::summarize(total_vote = sum(value)) %>% # Dunno how plyr got in, but whatever.
+  complete(variable) %>%
+  ungroup() %>% 
+  group_by(County) %>% 
+  mutate(sum_total = sum(total_vote, na.rm=T)) %>% 
+  mutate(proportion_numeric = total_vote / sum_total) %>%
+  select(-sum_total, -total_vote) %>% 
+  spread(key = variable, value = proportion_numeric)
+
+ternary_vote$StateName<-sapply(ternary_vote$StateName, function(i) ifelse(i=='Utah','Utah','Not Utah'))
+
+ggtern(ternary_vote, aes(x=clinton, y=trump, z=third_party, color=StateName))+
+  geom_point(aes(alpha = 0.2))
+
+```
+
+###Party Registration by State
+Not all states have partisan registration.
+```{r}
+party_registration <- select(voterReg2016, State, DReg, RReg, OReg, GReg, LReg, NReg) %>% 
+  melt(id= 'State') %>% 
+  group_by(State, variable) %>% 
+  dplyr::summarize(total_reg = sum(value)) %>% 
+  complete(variable) %>%
+  ungroup() %>% 
+  group_by(State) %>% 
+  mutate(sum_total = sum(total_reg, na.rm=T)) %>% 
+  mutate(proportion = ifelse(is.na(total_reg),NA,paste0(round(total_reg / sum_total, 4)*100,'%')),
+         proportion_numeric = total_reg / sum_total) %>%
+  select(-sum_total)
+
+party_registration$State<-sapply(party_registration$State, function(i) names(state_names)[which(state_names == i)])
+
+non_partisan_states<-(filter(party_registration, variable == 'NReg') %>% 
+                        filter(proportion_numeric == 1))$State
+party_registration <- filter(party_registration, !(State %in% non_partisan_states))
+
+party_order <- 'DReg' # CHANGE ME
+
+level_order<-(filter(party_registration,variable == party_order) %>% 
+                     select(State, proportion_numeric) %>% 
+                     arrange(desc(proportion_numeric)))$State
+
+party_registration$State<- factor(party_registration$State, levels = level_order)
+party_registration$variable<-factor(party_registration$variable, levels = c('NReg','OReg','GReg','LReg','RReg','DReg'))
+
+ggplot(party_registration, aes(x=State, y=total_reg, fill=variable)) + 
+  geom_bar(stat='identity', position = 'fill') +
+  scale_fill_manual(values = c('DReg' = 'blue', 'RReg' = 'red', 'GReg' = 'green','LReg' = 'yellow','OReg' = 'purple','NReg' = 'grey'),
+                    name = 'Candidate',
+                    breaks = c('NReg','OReg','GReg','LReg','RReg','DReg'),
+                    labels = c('No Party','Other Party','Green','Libertarian','Republican','Democratic')) +
+  labs(x = NULL, y = 'Percent of Registered Voters')+
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle('Percent of Voter Registration by State', subtitle='2016') +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+Looks like we have a bit of an issue here with Other and Non-partisan registration.  NE and WV are all "Other".
+
+###Partisan Registration by County within State
+Feel free to play with the variable in this.
+```{r}
+state <- 'West Virginia'
+
+party_registration_c <- filter(data2016, StateName == state) %>%  
+  select(CountyName, DReg, RReg, OReg, GReg, LReg, NReg) %>% 
+  melt(id= 'CountyName') %>% 
+  group_by(CountyName, variable) %>% 
+  dplyr::summarize(total_reg = sum(value)) %>% 
+  complete(variable) %>%
+  ungroup() %>% 
+  group_by(CountyName) %>% 
+  mutate(sum_total = sum(total_reg, na.rm=T)) %>% 
+  mutate(proportion = ifelse(is.na(total_reg),NA,paste0(round(total_reg / sum_total, 4)*100,'%')),
+         proportion_numeric = total_reg / sum_total) %>%
+  select(-sum_total)
+
+party_order <- 'DReg' # CHANGE ME
+
+level_order<-(filter(party_registration_c,variable == party_order) %>% 
+                     select(CountyName, proportion_numeric) %>% 
+                     arrange(desc(proportion_numeric)))$CountyName
+
+party_registration_c$CountyName<- factor(party_registration_c$CountyName, levels = level_order)
+party_registration_c$variable<-factor(party_registration_c$variable, levels = c('NReg','OReg','GReg','LReg','RReg','DReg'))
+
+ggplot(party_registration_c, aes(x=CountyName, y=total_reg, fill=variable)) + 
+  geom_bar(stat='identity', position = 'fill') +
+  scale_fill_manual(values = c('DReg' = 'blue', 'RReg' = 'red', 'GReg' = 'green','LReg' = 'yellow','OReg' = 'purple','NReg' = 'grey'),
+                    name = 'Candidate',
+                    breaks = c('NReg','OReg','GReg','LReg','RReg','DReg'),
+                    labels = c('No Party','Other Party','Green','Libertarian','Republican','Democratic')) +
+  labs(x = NULL, y = 'Percent of Registered Voters')+
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle('Percent of Voter Registration by County', subtitle=paste0(state,' - 2016')) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+###Voter Turnout by State
+* We don't have great data to do this, becuase the census bracket is from age 15-19, which cuts out two years of voting age.
+* Maybe because of this (but maybe not!) there are some states where (voted+registered but didn't vote) > total voting population.
+    + Even if the issue is not the census populations, it could be merely out of date voter registration data.
+```{r}
+turnout_data <- group_by(data2016, StateName) %>% 
+  dplyr::summarize(total_votes = sum(clinton,trump,johnson,stein,other, na.rm=T),
+                   total_reg_no_vote = sum(DReg,RReg,OReg,GReg,LReg,NReg, na.rm=T)-total_votes,
+                   total_not_registered = ifelse(sum(TotalPopulation)- sum(Age0_4)- sum(Age5_9)- sum(Age10_14) - sum(Age15_19) -
+                     total_reg_no_vote - total_votes<0,NA,sum(TotalPopulation)- sum(Age0_4)- sum(Age5_9)- sum(Age10_14) - 
+                     sum(Age15_19) - total_reg_no_vote - total_votes)) %>%  
+  melt(id = 'StateName') %>% 
+  group_by(StateName, variable) %>% 
+  dplyr::summarize(total_pop = sum(value)) %>% 
+  complete(variable) %>%
+  ungroup() %>% 
+  group_by(StateName) %>% 
+  mutate(sum_total = sum(total_pop, na.rm=T)) %>% 
+  mutate(proportion = ifelse(is.na(total_pop),NA,paste0(round(total_pop / sum_total, 4)*100,'%')),
+         proportion_numeric = total_pop / sum_total) %>%
+  select(-sum_total)
+
+turnout_data$variable<-factor(turnout_data$variable, levels = c('total_not_registered','total_reg_no_vote','total_votes'))
+
+ggplot(turnout_data, aes(x=StateName, y=total_pop, fill=variable)) + 
+  geom_bar(stat='identity', position = 'fill') +
+  scale_fill_manual(values = c('total_votes' = 'green', 'total_reg_no_vote' = 'purple', 'total_not_registered' = 'grey'),
+                    name = 'Population',
+                    breaks = c('total_votes','total_reg_no_vote','total_not_registered'),
+                    labels = c('Voted','Registered, but did not vote','Not Registered')) +
+  labs(x = NULL, y = 'Percent of Population')+
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle('Voter Turnout by State', subtitle='2016') +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+###Voter Turnout by County Within State
+```{r}
+state <- 'Kentucky'
+
+turnout_data_c <- filter(data2016, StateName == state) %>% 
+  group_by(CountyName) %>% 
+  dplyr::summarize(total_votes = sum(clinton,trump,johnson,stein,other, na.rm=T),
+                   total_reg_no_vote = sum(DReg,RReg,OReg,GReg,LReg,NReg, na.rm=T)-total_votes,
+                   total_not_registered = ifelse(sum(TotalPopulation)- sum(Age0_4)- sum(Age5_9)- sum(Age10_14) - sum(Age15_19) -
+                     total_reg_no_vote - total_votes<0,NA,sum(TotalPopulation)- sum(Age0_4)- sum(Age5_9)- sum(Age10_14) - 
+                     sum(Age15_19) - total_reg_no_vote - total_votes)) %>%  
+  melt(id = 'CountyName') %>% 
+  group_by(CountyName, variable) %>% 
+  dplyr::summarize(total_pop = sum(value)) %>% 
+  complete(variable) %>%
+  ungroup() %>% 
+  group_by(CountyName) %>% 
+  mutate(sum_total = sum(total_pop, na.rm=T)) %>% 
+  mutate(proportion = ifelse(is.na(total_pop),NA,paste0(round(total_pop / sum_total, 4)*100,'%')),
+         proportion_numeric = total_pop / sum_total) %>%
+  select(-sum_total)
+
+turnout_data_c$variable<-factor(turnout_data_c$variable, levels = c('total_not_registered','total_reg_no_vote','total_votes'))
+
+ggplot(turnout_data_c, aes(x=CountyName, y=total_pop, fill=variable)) + 
+  geom_bar(stat='identity', position = 'fill') +
+  scale_fill_manual(values = c('total_votes' = 'green', 'total_reg_no_vote' = 'purple', 'total_not_registered' = 'grey'),
+                    name = 'Population',
+                    breaks = c('total_votes','total_reg_no_vote','total_not_registered'),
+                    labels = c('Voted','Registered, but did not vote','Not Registered')) +
+  labs(x = NULL, y = 'Percent of Population')+
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle('Voter Turnout by County', subtitle=paste0(state,', 2016')) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+###Victory Margins
+* Not quite sure what we are going for, here.
+
+###Demographic / Economic Variables
+* Let's look at % of vote faceted over some different variables
+* This graphic produces county by county results facetting by quintile of Demographic/Economic variable
+    + You can change the variable in the code to see other variables.
+* There is one categorical variable, the code for producing it's facetted plot is in commented in this chunk.
+```{r}
+Demo_Factors <- select(data2016, County, propTrump, NCHS_UrbanRural2013, TotalPopulation, MedianAge, MedianHouseholdIncome, SimpsonDiversityIndex, propWhite, propBlack, propMfg2015, propHS, propMoreHS, propUnemp, propElders, propNMarried)
+
+lm(propTrump~.,select(Demo_Factors,-County)) %>% summary()
+
+Demo_Factors <- select(data2016, County, trump, clinton, johnson, stein, other, NCHS_UrbanRural2013, TotalPopulation, MedianAge, MedianHouseholdIncome, SimpsonDiversityIndex, propWhite, propBlack, propMfg2015, propHS, propMoreHS, propUnemp, propElders, propNMarried)
+
+vote_by_county_f<-select(Demo_Factors, County, clinton, trump, johnson, stein, other) %>% 
+  melt(id= c('County')) %>% 
+  group_by(County, variable) %>% 
+  dplyr::summarize(total_vote = sum(value)) %>% # Dunno how plyr got in, but whatever.
+  complete(variable) %>%
+  ungroup() %>% 
+  group_by(County) %>% 
+  mutate(sum_total = sum(total_vote, na.rm=T)) %>% 
+  mutate(proportion = ifelse(is.na(total_vote),NA,paste0(round(total_vote / sum_total, 4)*100,'%')),
+         proportion_numeric = total_vote / sum_total) %>%
+  select(-sum_total)
+
+vote_by_county_f <- left_join(vote_by_county_f, Demo_Factors, by='County')
+
+candidate_order <- 'clinton' # CHANGE ME
+
+level_order<-(filter(vote_by_county_f,variable == candidate_order) %>% 
+                     select(County, proportion_numeric) %>% 
+                     arrange(desc(proportion_numeric)))$County 
+
+vote_by_county_f$County<- factor(vote_by_county_f$County, levels = level_order)
+vote_by_county_f$variable<-factor(vote_by_county_f$variable, levels = c('other','stein','johnson','trump','clinton'))
+
+# ggplot(filter(vote_by_county_f, !is.na(NCHS_UrbanRural2013)), aes(x=County, y=total_vote, fill=variable)) + 
+#   geom_bar(stat='identity', position = 'fill') +
+#   scale_fill_manual(values = c('clinton' = 'blue', 'trump' = 'red', 'stein' = 'green','johnson' = 'yellow','other' = 'purple'), 
+#                     name = 'Candidate',
+#                     breaks = c('other','stein','johnson','trump','clinton'),
+#                     labels = c('Others','Jill Stein','Gary Johnson','Donald J Trump','Hillary Clinton')) +
+#   labs(x = NULL, y = 'Percent of Vote')+
+#   scale_y_continuous(labels = scales::percent) +
+#   ggtitle('Percent of Vote by County', subtitle='2016 USA Presidential Election') +
+#   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+#   facet_wrap(~NCHS_UrbanRural2013, scales = 'free_x')
+
+facetting_variable <- 'SimpsonDiversityIndex' #Change Me
+
+vote_by_county_f$fct <- cut(vote_by_county_f[[facetting_variable]], 
+                            breaks = c(0,quantile(vote_by_county_f[[facetting_variable]], 
+                                              probs = c(0.1, 0.25, 0.5, 0.75, 0.9),
+                                              na.rm = T),Inf),
+                            ordered_result = T,
+                            labels = c('Lowest 10%','10th - 25th %ile',
+                                       '25th %ile - Median','Median - 75th %ile',
+                                       '75th - 90th %ile', 'Top 10%'))
+
+ggplot(filter(vote_by_county_f, !is.na(fct)), aes(x=County, y=total_vote, fill=variable)) + 
+  geom_bar(stat='identity', position = 'fill') +
+  scale_fill_manual(values = c('clinton' = 'blue', 'trump' = 'red', 'stein' = 'green','johnson' = 'yellow','other' = 'purple'), 
+                    name = 'Candidate',
+                    breaks = c('other','stein','johnson','trump','clinton'),
+                    labels = c('Others','Jill Stein','Gary Johnson','Donald J Trump','Hillary Clinton')) +
+  labs(x = NULL, y = 'Percent of Vote')+
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle(paste0('Percent of Vote by County ~ ',facetting_variable), subtitle='2016 USA Presidential Election') +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  facet_wrap(~fct, scales = 'free_x')
+
+
+```
+
