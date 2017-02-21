@@ -1,0 +1,193 @@
+# Data Vis for Presidential Elections
+
+library(shinydashboard)
+library(shiny)
+library(leaflet)
+library(rgdal)
+library(gpclib)
+library(maptools)
+library(R6)
+library(raster)
+library(broom)
+library(scales)
+library(reshape2)
+library(tidyverse)
+gpclibPermit()
+
+
+elections <-list(
+  'Election_2000' = read_csv('https://query.data.world/s/404aq0u4n98hmozughp08npg1') %>% select(County, CountyName, StateName, bush, gore, nader, browne, other),
+  'Election_2004' = read_csv('https://query.data.world/s/6mr92w4p92rem4bpbs1ggzcui') %>% select(County, CountyName, StateName, bush, kerry, other),
+  'Election_2008' = read_csv('https://query.data.world/s/8pz64y5pglv8dt6umysffgahh') %>% select(County, CountyName, StateName, mccain, obama, other),
+  'Election_2012' = read_csv('https://query.data.world/s/29sed01wkb9ljmgg0kgj3ztop') %>% select(County, CountyName, StateName, romney, obama, johnson, stein, other),
+  'Election_2016' = read_csv('https://query.data.world/s/dmjcapenh4fg8y7chl5oqgjto') %>% select(County, CountyName, StateName, trump, clinton, johnson, stein, other)
+)
+
+
+elections[[4]]<-mutate(elections[[4]], CountyName= paste(CountyName, 'County'))
+elections[[5]]<-mutate(elections[[5]], CountyName=paste(CountyName, 'County'))
+
+# Function for capitalizing names.
+proper<-function(x) paste0(toupper(substr(x, 1, 1)), tolower(substring(x, 2)))
+
+# 2012 election sees FIPS as integer and not as character, have to work around to coerce leading 0s.
+FIPS<-data_frame(FIPS=elections[[5]]$County, CountyName=paste(proper(elections[[5]]$CountyName),proper(elections[[5]]$StateName)))
+elections[[4]]$County <- sapply(paste(proper(elections[[4]]$CountyName),proper(elections[[4]]$StateName)), function(i){
+  FIPS$FIPS[which(i == FIPS$CountyName)[1]]
+})
+
+statesDf <- read_csv('https://query.data.world/s/863x2al2iemb7w983tk0ejtjs')
+state_table <- as.integer(statesDf$State)
+names(state_table) <- statesDf$StateName
+
+# Vector used for select box in Shiny App
+election_names <- c(
+  '2000 - Bush & Gore'='Election_2000',
+  '2004 - Bush & Kerry'='Election_2004',
+  '2008 - McCain & Obama'='Election_2008',
+  '2012 - Romney & Obama'='Election_2012',
+  '2016 - Trump & Clinton'='Election_2016'
+)
+
+# Read in shapefiles, prepare for leaflets (filter out geographies that can't vote in Pres elex)
+state_shape <- readOGR(dsn = './shapefiles/states', layer = 'cb_2015_us_state_500k')
+state_shape@data$id <- rownames(state_shape@data)
+state_shape.points <- tidy(state_shape, region = 'id')
+state_shape.df <- inner_join(state_shape.points, state_shape@data, by='id')
+state_shape.df <- mutate(state_shape.df, region=NAME)
+state_shape <- subset(state_shape, NAME %in% names(state_table))
+
+county_shape <- readOGR(dsn = './shapefiles/counties', layer = 'cb_2015_us_county_500k')
+county_shape@data$id <- rownames(county_shape@data)
+county_shape.points <- tidy(county_shape, region = 'id')
+county_shape.df <- inner_join(county_shape.points, county_shape@data, by='id')
+county_shape.df <- mutate(county_shape.df, region=paste(NAME,'County'))
+
+# Function for capitalizing names.
+proper<-function(x) paste0(toupper(substr(x, 1, 1)), tolower(substring(x, 2)))
+
+# Election color shading courtesy of Dave Leip at US Election Atlas
+# http://uselectionatlas.org
+color_function<-function(percent, color){
+  if(color == 'red'){
+    if(percent < .5) '#ff0000'
+    else if(percent < .6) '#9b0000'
+    else if(percent < .7) '#880000'
+    else if(percent < .8) '#c10000'
+    else '#990000'
+  }else if(color == 'blue'){
+    if(percent < .5) '#0000ff'
+    else if(percent < .6) '#00009b'
+    else if(percent < .7) '#000088'
+    else if(percent < .8) '#0000c1'
+    else '#000099'
+  }else 'white'
+}
+
+# DPLYR heavy function for creating table of results in shiny app
+create_result_df <- function(election_select, state_select){
+  if(state_select == 'National'){
+    election <- elections[[names(elections)[which(election_names == election_select)]]]
+  }else{
+    election <- elections[[names(elections)[which(election_names == election_select)]]] %>% filter(StateName == state_select)
+  }
+  election[is.na(election)] <- 0 #na.rm-ish.
+  election<-election %>% 
+    select(-CountyName,-StateName,-County) %>% 
+    melt() %>% 
+    group_by(variable) %>% 
+    summarize(sum(value)) %>% 
+    mutate(variable = proper(variable), `sum(value)`=comma_format()(floor(`sum(value)`)))
+  names(election)<-c('Candidate','Votes')
+  election
+}
+
+# Heavy lifting done here--create the leaflet.
+create_leaflet <- function(election_select, state_select){
+  # Set shape, national uses different shapefile.
+  if(state_select == 'National'){
+    shape <- state_shape
+    election <- elections[[names(elections)[which(election_names == election_select)]]] %>% 
+      select(-CountyName,-County) %>% 
+      group_by(StateName) %>% 
+      summarize_all(sum)
+    # Add winner column to election df
+    election$winner<-sapply(1:nrow(election), function(i){
+      if(which(election[i,2:length(election)] == max(election[i,2:length(election)],na.rm=T)) %>% length() > 1){
+        'Tie'
+      }else names(election[i,2:length(election)])[which(election[i,2:length(election)] == max(election[i,2:length(election)],na.rm=T))] 
+    }) %>% factor()
+    shape@data$region <- shape@data$NAME # region needed for consistency.
+    shape@data<-left_join(shape@data, election, by=c('NAME' = 'StateName'))
+    candidates<-names(election)[2:3]
+  }else{
+    shape <- subset(county_shape, as.numeric(as.character(STATEFP)) == state_table[which(names(state_table) == state_select)])
+    # Filter election for correct state
+    election <- elections[[names(elections)[which(election_names == election_select)]]] %>% 
+      filter(StateName == state_select) %>% 
+      mutate(County = as.character(County))
+    election$CountyName <- as.factor(as.character(election$CountyName))
+    election[is.na(election)] <- 0 # replace na with 0, need to do this for dplyr functions.
+    # Copied from above.  Good functional programmers are disappointed.
+    election$winner<-vector(length = length(nrow(election)))
+    election$percent<-vector(length = length(nrow(election)))
+    for(i in 1:nrow(election)){
+      if(which(election[i,4:(length(election)-2)] == max(election[i,4:(length(election)-2)])) %>% length() > 1){
+        election$winner[i]<-'Tie'
+      }else election$winner[i]<- names(election[i,4:(length(election)-2)])[which(election[i,4:(length(election)-2)] == max(election[i,4:(length(election)-2)]))]     
+      election$percent[i]<- max(election[i,4:(length(election)-2)]) / sum(election[i,4:(length(election)-2)])
+    }
+    election$winner<-factor(election$winner)
+    shape@data$region <- shape@data$GEOID # region needed for consistency
+    shape@data <- left_join(shape@data, election, by=c('region' = 'County'))
+    candidates<-names(election)[4:5]
+  }
+  # GOP is Red, Democrats are Blue.  Why?  No one knows.
+  colors<-c('red','blue')
+  # Coloring the map.
+  shape$color <- sapply(shape$winner, function(i) ifelse(i %in% candidates, colors[which(candidates == i)], 'white'))
+  shape$color <- mapply(color_function, shape$percent, shape$color)
+
+  # Create popup label in leaflet.
+  pop <- paste0('<strong>',shape$NAME,'</strong><br>',proper(candidates[1]),':', comma_format()(shape[[which(names(shape) == candidates[1])]]),
+                '<br>',proper(candidates[2]),':',comma_format()(shape[[which(names(shape) == candidates[2])]]))
+  
+  to_return <- leaflet(data = shape) %>% 
+    addTiles() %>% 
+    addPolygons(data = shape, stroke = F, smoothFactor=0.2, fillOpacity = 0.8, color=shape$color, popup=pop) %>% 
+    addPolylines(weight=2, color='black')
+  # Set zoom to exclude AK and HI in national map (you can still scroll/zoom to find them.)
+  if(state_select == 'National') to_return <- to_return %>% setView(lng = -98.585522, lat = 39.833333, zoom = 3.66) 
+  to_return
+}
+
+# Set UI in Shiny App
+ui<-dashboardPage(
+  dashboardHeader(title = 'United States Presidential Elections, 2000-2016',
+                  titleWidth = 600),
+  dashboardSidebar(
+    selectInput('election_selection', 'Select Election', election_names, selected = 'Election_2016'),
+    selectInput('state_selection', 'Select State', c('National',names(state_table)), selected = 'Kentucky')
+  ),
+  dashboardBody(
+    # Style tag helps make leaflet take up more space.
+    tags$style(type = "text/css", 
+               "#selected_election {height: calc(100vh - 400px) !important;}",
+               ".shiny-output-error { visibility: hidden; }",
+               ".shiny-output-error:before { visibility: hidden; }"),
+    leafletOutput('selected_election'),
+    dataTableOutput('election_result'), width = 12, height = 12
+  )
+)
+
+# Use functions frm above in server portion of shiny app
+server <- function(input, output){
+  output$selected_election <- renderLeaflet({
+    create_leaflet(election_select = input$election_selection, state_select = input$state_selection)
+  })
+  output$election_result <- renderDataTable({
+    create_result_df(election_select = input$election_selection, state_select = input$state_selection)
+  }, options = list(searching = F, paging = F))
+}
+
+shinyApp(ui,server)
