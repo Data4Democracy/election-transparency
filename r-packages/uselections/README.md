@@ -220,9 +220,9 @@ For detailed documentation on the data frame:  `?uselections::CountyCharacterist
 * TotalEmp2001 = County Total Employment in 2001
 * TotalEmp2015 = County Total Employment in 2015
 * LandAreaSqMiles = County Land Area (in square miles)
-* Employment = County Employment, Oct 2015
-* LaborForce = County Labor Force, Oct 2015
-* Unemployment = County Unemployment, Oct 2015
+* Employment = County Employment, Oct 2016
+* LaborForce = County Labor Force, Oct 2016
+* Unemployment = County Unemployment, Oct 2016
 * NCHS_UrbanRural2013 = CDC census-based NCHS Urban-Rural Classification Scheme for Counties (2010 Census)
 * NCHS_UrbanRural2006 = CDC census-based NCHS Urban-Rural Classification Scheme for Counties (2000 Census)
 * NCHS_UrbanRural1990 = CDC census-based NCHS Urban-Rural Classification Scheme for Counties (1990 Census)
