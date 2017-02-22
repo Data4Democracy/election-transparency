@@ -75,6 +75,7 @@
 \item{OASDI}{Total persons receiving OASDI benefits in 2015 (SSI Recipients by State/County)}
 \item{SSIPayments}{Total SSI payments received in 2015 (SSI Recipients by State/County)}
 \item{WoodardAmericanNation}{The "Nation" to which the county belongs, in Colin Woodard's "American Nations"}
+\item{FoundryCounty}{Whether the county is part of "The Foundry", one of the nine Nations of North America defined by Joel Garreau (roughly, the rustbelt)}
 }}
 \usage{
 CountyCharacteristics

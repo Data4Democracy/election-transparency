@@ -118,13 +118,25 @@ AmericanNations <- read_csv('http://specialprojects.pressherald.com/americannati
   filter(!(County %in% c('46113', '02270'))) %>% # these counties don't exist
   bind_rows(data.frame(County=c('02158', '01059', '46102'), WoodardAmericanNation=c('First Nation', 'Deep South', 'Far West'))) # not in Woodard's list
 
+FoundryPartialStates <- read_csv('data-raw/FoundryPartialStateCounties.txt',
+                                 col_types=cols_only(X1=col_character(), X2=col_character()), col_names=FALSE) %>%
+  inner_join(States, by=c("X1"="StateAbbr")) %>% select(State, X2) %>%
+  inner_join(getCountyData() %>% select(County=GEOID, CountyName=NAME, State=STATEFP) %>%
+               mutate_each("as.character"), by=c('X2'='CountyName', 'State'='State')) %>% select(County)
+
+FoundryCompleteStates <- getCountyData() %>% select(STATEFP, GEOID) %>% mutate_each ('as.character') %>%
+  filter(STATEFP %in% c('26','34','36','39','42')) %>% filter(GEOID != '36061')  %>% # MI, OH, PA, NY, NJ...minus Manhattan
+  select(County=GEOID)
+
+FoundryCounties <- c(FoundryPartialStates$County, FoundryCompleteStates$County)
+
 CountyCharacteristics <- loadCountyACSData() %>% full_join(loadCountyBEAData(), by="County") %>%
   inner_join(AmericanNations, by="County") %>%
   inner_join(CountyArea, by=c('County'='GEOID')) %>%
   inner_join(loadCountyBLSData(), by='County') %>%
   inner_join(loadCountySSIData(), by='County') %>%
   left_join(loadCountyCDCData(), by='County') %>%
-  mutate(State=substr(County, 1, 2))
+  mutate(State=substr(County, 1, 2), FoundryCounty=County %in% FoundryCounties)
 
 AlaskaPrecinctBoroughMapping <- getAlaskaPrecinctCountyMapping()
 
@@ -140,7 +152,9 @@ rm(AlaskaPrecinctBoroughMapping)
 rm(countyData)
 rm(df)
 rm(dfs)
-rm(states)
 rm(States)
 rm(CountyCharacteristics)
 rm(CountyArea)
+rm(FoundryPartialStates)
+rm(FoundryCompleteStates)
+rm(FoundryCounties)

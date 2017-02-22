@@ -241,3 +241,4 @@ For detailed documentation on the data frame:  `?uselections::CountyCharacterist
 * OASDI = Total persons receiving OASDI benefits in 2015 (SSI Recipients by State/County)
 * SSIPayments = Total SSI payments received in 2015 (SSI Recipients by State/County)
 * WoodardAmericanNation = The "Nation" to which the county belongs, in Colin Woodard's "American Nations"
+* FoundryCounty = Whether the county is part of "The Foundry", one of the nine Nations of North America defined by Joel Garreau (roughly, the rustbelt)
