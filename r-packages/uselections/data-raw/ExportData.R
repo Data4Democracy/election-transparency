@@ -3,6 +3,7 @@
 library(dplyr)
 library(readr)
 library(rgdal)
+library(stringr)
 
 dfs <- list(
   uselections::loadAlabama(),
@@ -76,7 +77,15 @@ df <- PartyRegistration %>%
 
 PartyRegistration <- PartyRegistration %>% inner_join(df, by=c("County"="County", "Year"="Year", "Month"="Month"))
 
-states <- read_csv("data-raw/States.txt", col_names=paste0('X', seq(4)), col_types='ccci')
+States <- read_csv("data-raw/States.txt",
+                   col_types=cols_only(State = col_character(),
+                                       StateName = col_character(),
+                                       StateAbbr = col_character(),
+                                       ElectoralVotes = col_integer(),
+                                       AllowsPartyRegistration = col_logical(),
+                                       VoterIDLaw = col_integer(),
+                                       VoterIDLawVerbose = col_character(),
+                                       ClosedPrimary = col_logical()))
 
 countyData <- uselections::getCountyData() %>% select(STATEFP, GEOID, NAME) %>%
   mutate_each("as.character") %>%
@@ -86,14 +95,8 @@ countyData <- uselections::getCountyData() %>% select(STATEFP, GEOID, NAME) %>%
   mutate(NAME=recode(GEOID, "51770"="Roanoke City", "51161"="Roanoke County", .default=NAME)) %>%
   mutate(NAME=recode(GEOID, "51600"="Fairfax City", "51059"="Fairfax County", .default=NAME)) %>%
   mutate(NAME=recode(GEOID, "51620"="Franklin City", "51067"="Franklin County", .default=NAME)) %>%
-  inner_join(states, by=c("STATEFP"="X2")) %>%
-  select(CountyName=NAME, StateName=X1, StateAbbr=X3, County=GEOID)
-
-States <- states %>% select(State=X2, StateName=X1, StateAbbr=X3, ElectoralVotes=X4) %>%
-  mutate(AllowsPartyRegistration=as.integer(StateAbbr %in%
-                                              c('AK','CA','CO','CT','DE','DC','FL','ID','IA','KS','KY','ME','MD',
-                                                'MA','NE','NV','NH','NJ','NM','NY','NC','OK','OR','PA','RI','SD',
-                                                'UT','WV','WY')))
+  inner_join(States, by=c("STATEFP"="State")) %>%
+  select(CountyName=NAME, StateName, StateAbbr, County=GEOID)
 
 PartyRegistration <- PartyRegistration %>%
   inner_join(countyData, by="County") %>%
@@ -108,7 +111,15 @@ CountyArea <- getCountyData() %>% mutate(LandAreaSqMiles=(as.numeric(as.characte
   select(GEOID, LandAreaSqMiles) %>%
   mutate(GEOID=as.character(GEOID))
 
+AmericanNations <- read_csv('http://specialprojects.pressherald.com/americannations/county_results.csv',
+                            col_types=cols_only(GEOID=col_integer(), AN_TITLE=col_character())) %>%
+  mutate(County=str_pad(GEOID, 5, 'left', '0'), WoodardAmericanNation=AN_TITLE) %>%
+  select(County, WoodardAmericanNation) %>%
+  filter(!(County %in% c('46113', '02270'))) %>% # these counties don't exist
+  bind_rows(data.frame(County=c('02158', '01059', '46102'), WoodardAmericanNation=c('First Nation', 'Deep South', 'Far West'))) # not in Woodard's list
+
 CountyCharacteristics <- loadCountyACSData() %>% full_join(loadCountyBEAData(), by="County") %>%
+  inner_join(AmericanNations, by="County") %>%
   inner_join(CountyArea, by=c('County'='GEOID')) %>%
   inner_join(loadCountyBLSData(), by='County') %>%
   inner_join(loadCountySSIData(), by='County') %>%

@@ -54,9 +54,9 @@
 \item{TotalEmp2001}{County Total Employment in 2001}
 \item{TotalEmp2015}{County Total Employment in 2015}
 \item{LandAreaSqMiles}{County Land Area (in square miles)}
-\item{Employment}{County Employment, Oct 2015}
-\item{LaborForce}{County Labor Force, Oct 2015}
-\item{Unemployment}{County Unemployment, Oct 2015}
+\item{Employment}{County Employment, Oct 2016}
+\item{LaborForce}{County Labor Force, Oct 2016}
+\item{Unemployment}{County Unemployment, Oct 2016}
 \item{NCHS_UrbanRural2013}{CDC census-based NCHS Urban-Rural Classification Scheme for Counties (2010 Census)}
 \item{NCHS_UrbanRural2006}{CDC census-based NCHS Urban-Rural Classification Scheme for Counties (2000 Census)}
 \item{NCHS_UrbanRural1990}{CDC census-based NCHS Urban-Rural Classification Scheme for Counties (1990 Census)}
@@ -74,6 +74,7 @@
 \item{BlindDisabledSSI}{Total persons receiving SSI blind/disabled benefits in 2015 (SSI Recipients by State/County)}
 \item{OASDI}{Total persons receiving OASDI benefits in 2015 (SSI Recipients by State/County)}
 \item{SSIPayments}{Total SSI payments received in 2015 (SSI Recipients by State/County)}
+\item{WoodardAmericanNation}{The "Nation" to which the county belongs, in Colin Woodard's "American Nations"}
 }}
 \usage{
 CountyCharacteristics
