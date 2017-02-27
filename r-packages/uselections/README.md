@@ -146,29 +146,32 @@ To access the CountyCharacteristics data frame that is exposed by the package:
 
 ```
 > uselections::CountyCharacteristics
-# A tibble: 3,141 × 68
-   County MedianHouseholdIncome TotalPopulation  Male Female Age0_4 Age5_9 Age10_14 Age15_19 Age20_24 Age25_34 Age35_44 Age45_54 Age55_59 Age60_64
-    <chr>                 <int>           <int> <int>  <int>  <int>  <int>    <int>    <int>    <int>    <int>    <int>    <int>    <int>    <int>
-1   01001                 51281           55221 26745  28476   3242   3890     4314     4034     3422     6724     7716     8173     3530     2698
-2   01003                 50254          195121 95314  99807  10494  12787    12868    11793    10178    22740    24627    27202    13043    14013
-3   01005                 32964           26932 14497  12435   1476   1752     1570     1493     1833     3870     3360     3783     1848     1622
-4   01007                 38678           22604 12073  10531   1133   1458     1420     1603     1361     3086     3445     3131     1351     1361
-5   01009                 45813           57710 28512  29198   3545   3773     3921     3923     3140     6768     7445     8246     3740     3697
-6   01011                 31938           10678  5660   5018    675    660      575      456      874     1321     1686     1421      593      859
-7   01013                 32229           20354  9502  10852   1243   1389     1314     1140     1272     2456     2353     2673     1422     1468
-8   01015                 41703          116648 56274  60374   6816   7538     7168     7780     8646    14763    14167    15887     8110     7706
-9   01017                 34177           34079 16258  17821   2040   1956     2058     2031     2180     3876     4171     4854     2790     2001
-10  01019                 36296           26008 12975  13033   1285   1509     1554     1502     1424     2524     3059     3837     2004     2154
-# ... with 3,131 more rows, and 53 more variables: Age65_74 <int>, Age75_84 <int>, Age85 <int>, MedianAge <dbl>, White <int>, Black <int>,
-#   AmericanIndianAlaskaNative <int>, Asian <int>, NativeHawaiianPacificIslander <int>, OtherRace <int>, Hispanic <int>,
-#   SimpsonDiversityIndex <dbl>, Population25Plus <int>, EdK8 <int>, Ed9_12 <int>, EdHS <int>, EdCollNoDegree <int>, EdAssocDegree <int>,
-#   EdBachelorDegree <int>, EdGraduateDegree <int>, MedianHousingCosts <int>, Married <int>, Widowed <int>, Divorced <int>, Separated <int>,
-#   NeverMarried <int>, Uninsured <int>, ForeignBorn <int>, NonCitizen <int>, Disability <int>, MfgEmp1970 <int>, MfgEmp1980 <int>,
-#   MfgEmp1990 <int>, MfgEmp2001 <int>, MfgEmp2015 <int>, TotalEmp1970 <int>, TotalEmp1980 <int>, TotalEmp1990 <int>, TotalEmp2001 <int>,
-#   TotalEmp2015 <int>, LandAreaSqMiles <dbl>, Employment <dbl>, LaborForce <dbl>, Unemployment <dbl>, TotalSSI <int>, AgedSSI <int>,
-#   BlindDisabledSSI <int>, OASDI <int>, SSIPayments <int>, NCHS_UrbanRural2013 <chr>, NCHS_UrbanRural2006 <chr>, NCHS_UrbanRural1990 <chr>,
-#   State <chr>
->```
+# A tibble: 3,141 × 75
+   County MedianHouseholdIncome TotalPopulation  Male Female Age0_4 Age5_9 Age10_14 Age15_19 Age20_24 Age25_34 Age35_44 Age45_54
+    <chr>                 <int>           <int> <int>  <int>  <int>  <int>    <int>    <int>    <int>    <int>    <int>    <int>
+1   01001                 51281           55221 26745  28476   3242   3890     4314     4034     3422     6724     7716     8173
+2   01003                 50254          195121 95314  99807  10494  12787    12868    11793    10178    22740    24627    27202
+3   01005                 32964           26932 14497  12435   1476   1752     1570     1493     1833     3870     3360     3783
+4   01007                 38678           22604 12073  10531   1133   1458     1420     1603     1361     3086     3445     3131
+5   01009                 45813           57710 28512  29198   3545   3773     3921     3923     3140     6768     7445     8246
+6   01011                 31938           10678  5660   5018    675    660      575      456      874     1321     1686     1421
+7   01013                 32229           20354  9502  10852   1243   1389     1314     1140     1272     2456     2353     2673
+8   01015                 41703          116648 56274  60374   6816   7538     7168     7780     8646    14763    14167    15887
+9   01017                 34177           34079 16258  17821   2040   1956     2058     2031     2180     3876     4171     4854
+10  01019                 36296           26008 12975  13033   1285   1509     1554     1502     1424     2524     3059     3837
+# ... with 3,131 more rows, and 62 more variables: Age55_59 <int>, Age60_64 <int>, Age65_74 <int>, Age75_84 <int>, Age85 <int>,
+#   MedianAge <dbl>, White <int>, Black <int>, AmericanIndianAlaskaNative <int>, Asian <int>, NativeHawaiianPacificIslander <int>,
+#   OtherRace <int>, Hispanic <int>, SimpsonDiversityIndex <dbl>, Population25Plus <int>, EdK8 <int>, Ed9_12 <int>, EdHS <int>,
+#   EdCollNoDegree <int>, EdAssocDegree <int>, EdBachelorDegree <int>, EdGraduateDegree <int>, MedianHousingCosts <int>,
+#   Married <int>, Widowed <int>, Divorced <int>, Separated <int>, NeverMarried <int>, Uninsured <int>, ForeignBorn <int>,
+#   NonCitizen <int>, Disability <int>, MfgEmp1970 <int>, MfgEmp1980 <int>, MfgEmp1990 <int>, MfgEmp2001 <int>, MfgEmp2015 <int>,
+#   TotalEmp1970 <int>, TotalEmp1980 <int>, TotalEmp1990 <int>, TotalEmp2001 <int>, TotalEmp2015 <int>,
+#   WoodardAmericanNation <chr>, LandAreaSqMiles <dbl>, Employment <dbl>, LaborForce <dbl>, Unemployment <dbl>, TotalSSI <int>,
+#   AgedSSI <int>, BlindDisabledSSI <int>, OASDI <int>, SSIPayments <int>, NCHS_UrbanRural2013 <chr>, NCHS_UrbanRural2006 <chr>,
+#   NCHS_UrbanRural1990 <chr>, TotalReligiousAdherents <int>, EvangelicalAdherents <int>, CatholicAdherents <int>,
+#   MormonAdherents <int>, State <chr>, FoundryCounty <lgl>, MexicanBorderCounty <lgl>
+>
+```
 
 For detailed documentation on the data frame:  `?uselections::CountyCharacteristics`.  In short:
 
@@ -242,3 +245,8 @@ For detailed documentation on the data frame:  `?uselections::CountyCharacterist
 * SSIPayments = Total SSI payments received in 2015 (SSI Recipients by State/County)
 * WoodardAmericanNation = The "Nation" to which the county belongs, in Colin Woodard's "American Nations"
 * FoundryCounty = Whether the county is part of "The Foundry", one of the nine Nations of North America defined by Joel Garreau (roughly, the rustbelt)
+* MexicanBorderCounty = Whether the county is within approximately 75 miles of the Mexican border
+* TotalReligiousAdherents = Total number of religious adherents (2010 ARDA Religious Cong/Membership Survey)
+* EvangelicalAdherents = Evangelical religious adherents (2010 ARDA Religious Cong/Membership Survey)
+* CatholicAdherents = Catholic religious adherents (2010 ARDA Religious Cong/Membership Survey)
+* MormonAdherents = Mormon religious adherents (2010 ARDA Religious Cong/Membership Survey)

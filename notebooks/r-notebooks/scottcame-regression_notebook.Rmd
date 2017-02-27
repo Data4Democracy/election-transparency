@@ -57,6 +57,11 @@ countyCharacteristicsDf <- read_csv('https://query.data.world/s/2iliwt06bj17uv21
                                                         NCHS_UrbanRural2013=col_character(),
                                                         WoodardAmericanNation=col_character(),
                                                         FoundryCounty=col_logical(),
+                                                        MexicanBorderCounty=col_logical(),
+                                                        TotalReligiousAdherents=col_integer(),
+                                                        EvangelicalAdherents=col_integer(),
+                                                        CatholicAdherents=col_integer(),
+                                                        MormonAdherents=col_integer(),
                                                         BlindDisabledSSI=col_integer(),
                                                         SSIPayments=col_integer()))
 
@@ -88,6 +93,10 @@ df <- results2016Df %>% inner_join(registrationDf, by="County") %>% inner_join(c
          Turnout=totalvotes/RegisteredVoters,
          ThirdPartyVoteShare=ThirdPartyVotes/totalvotes,
          TrumpWin=rDRPct > .5,
+         TotalReligiousPct=TotalReligiousAdherents/TotalPopulation,
+         EvangelicalPct=ifelse(is.na(EvangelicalAdherents), 0, EvangelicalAdherents)/TotalPopulation,
+         CatholicPct=ifelse(is.na(CatholicAdherents), 0, CatholicAdherents)/TotalPopulation,
+         MormonPct=ifelse(is.na(MormonAdherents), 0, MormonAdherents)/TotalPopulation,
          MfgEmp1980=MfgEmp1980/TotalEmp1980,
          MfgEmp1990=MfgEmp1990/TotalEmp1990,
          MfgEmp2015=MfgEmp2015/TotalEmp2015,
@@ -98,7 +107,8 @@ df <- results2016Df %>% inner_join(registrationDf, by="County") %>% inner_join(c
   select(County, rDRPct, TrumpWin, Turnout, ThirdPartyVoteShare, MedianHouseholdIncome, MedianAge, MedianHousingCosts,
          MfgEmpChange1980_2015, MfgEmpChange1990_2015, Rural, WoodardAmericanNation, FoundryCounty, BlindDisabledSSI,
          Age55Plus, White, Hispanic, EdHS, UnemploymentRate, PopulationDensity, Married, Uninsured, ForeignBorn, SSIPerCapita,
-         CountyName, StateAbbr)
+         TotalReligiousPct, EvangelicalPct, CatholicPct, MormonPct,
+         CountyName, StateAbbr, MexicanBorderCounty)
 
 
 ```
@@ -109,7 +119,9 @@ OLS regression of [% Trump two-party vote] on significant independent variables.
 
 ```{r kc}
 ddf <- df %>% select(-MfgEmpChange1980_2015, -MfgEmpChange1990_2015, -BlindDisabledSSI) %>% na.omit()
-result <- lm(rDRPct ~ Turnout+ThirdPartyVoteShare+MedianHouseholdIncome+MedianHousingCosts+Age55Plus+White+Hispanic+EdHS+Married+Uninsured+ForeignBorn+SSIPerCapita+FoundryCounty, data=ddf)
+result <- lm(rDRPct ~ Turnout+ThirdPartyVoteShare+MedianHouseholdIncome+MedianHousingCosts+Age55Plus+White+Hispanic+
+               EdHS+Married+Uninsured+ForeignBorn+SSIPerCapita+FoundryCounty+MexicanBorderCounty+
+               TotalReligiousPct+EvangelicalPct+MormonPct, data=ddf)
 summary(result)
 ```
 
@@ -117,7 +129,7 @@ This model achieves a fairly good goodness-of-fit (R-squared).  But it is intere
 
 ```{r resid}
 ddf$rDRPct_fitted <- fitted(result)
-ddf <- ddf %>% mutate(rDRPct_residual=rDRPct-pred) %>% arrange(rDRPct_residual)
+ddf <- ddf %>% mutate(rDRPct_residual=rDRPct-rDRPct_fitted) %>% arrange(rDRPct_residual)
 ```
 
 Here are the ten counties where Trump most under-performed what the model would predict (actual % of two-party vote was lower than model-predicted):

@@ -124,6 +124,13 @@ FoundryPartialStates <- read_csv('data-raw/FoundryPartialStateCounties.txt',
   inner_join(getCountyData() %>% select(County=GEOID, CountyName=NAME, State=STATEFP) %>%
                mutate_each("as.character"), by=c('X2'='CountyName', 'State'='State')) %>% select(County)
 
+MexicanBorderCounties <- read_csv('data-raw/MexicanBorderCounties.txt',
+                                  col_types=cols_only(X1=col_character(), X2=col_character()), col_names=FALSE) %>%
+  inner_join(States, by=c("X2"="StateAbbr")) %>% select(State, X1) %>%
+  left_join(getCountyData() %>% select(County=GEOID, CountyName=NAME, State=STATEFP) %>%
+               mutate_each("as.character"), by=c('X1'='CountyName', 'State'='State')) %>%
+  mutate(County=ifelse(X1=='Dona Ana', '35013', County)) %>% select(County)
+
 FoundryCompleteStates <- getCountyData() %>% select(STATEFP, GEOID) %>% mutate_each ('as.character') %>%
   filter(STATEFP %in% c('26','34','36','39','42')) %>% filter(GEOID != '36061')  %>% # MI, OH, PA, NY, NJ...minus Manhattan
   select(County=GEOID)
@@ -136,7 +143,9 @@ CountyCharacteristics <- loadCountyACSData() %>% full_join(loadCountyBEAData(), 
   inner_join(loadCountyBLSData(), by='County') %>%
   inner_join(loadCountySSIData(), by='County') %>%
   left_join(loadCountyCDCData(), by='County') %>%
-  mutate(State=substr(County, 1, 2), FoundryCounty=County %in% FoundryCounties)
+  left_join(loadCountyReligionCensusData(), by='County') %>%
+  mutate(State=substr(County, 1, 2),
+         FoundryCounty=County %in% FoundryCounties, MexicanBorderCounty=County %in% MexicanBorderCounties$County)
 
 AlaskaPrecinctBoroughMapping <- getAlaskaPrecinctCountyMapping()
 
@@ -158,3 +167,4 @@ rm(CountyArea)
 rm(FoundryPartialStates)
 rm(FoundryCompleteStates)
 rm(FoundryCounties)
+rm(MexicanBorderCounties)
