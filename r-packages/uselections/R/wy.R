@@ -6,7 +6,7 @@ loadWyoming <- function() {
   countyNameFIPSMapping <- getCountyNameFIPSMapping('56') %>%
     mutate(CountyName=toupper(CountyName))
 
-  df <- read_csv("data-raw/wy/16GeneralVR_stats.csv",
+  df <- read_csv("data-raw/wy/2016DecVR_stats.csv",
                  col_names=c('County' ,'Constitution' ,'Democratic' ,'Libertarian' ,'Republican' ,'Unaffiliated' ,'Other*' ,'Empty','TOTAL'),
                  skip=1, col_types='cinnnnicn') %>%
     rename(CountyName=County, R=Republican, D=Democratic, L=Libertarian, N=Unaffiliated) %>%

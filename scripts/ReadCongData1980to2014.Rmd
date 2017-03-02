@@ -1,0 +1,71 @@
+---
+title: "ReadCongressionalData1980to2014"
+author: "Chris Dick"
+date: "February 7, 2017"
+output: html_document
+---
+
+Script used to read congressional election results for 1980 to 2004 from the [Constituency-Level Elections Archive](http://www.electiondataarchive.org/datacenter.html)
+
+```{r}
+library(data.table)
+library(dplyr)
+library(stringr)
+library(reshape2)
+
+# Load state info from data.world (for state Postal and FIPS codes) and results downloaded from CLEA
+# Citation for data: Kollman, Ken, Allen Hicken, Daniele Caramani, David Backer, and David Lublin. 
+# 2016. Constituency-Level Elections Archive. Produced and distributed by Ann Arbor, MI: 
+# Center for Political Studies, University of Michigan.
+# Downloaded on Feb-06-2017 from: http://www.electiondataarchive.org/datacenter.html
+df_state <- read.csv("https://query.data.world/s/7g2b95zv0avmvfw6gqyucbxdp",header=T)
+load("~/Desktop/clea_20161024.Rdata")
+```
+
+Clean up the data for our use. One major issue we have is that any race that was uncontested is simply coded as -992. Therefore, for states that had uncontested elections in any of the years, you **cannot** sum the votes to the state level and get the correct state total of votes. *This is something we need to fix in the future*.
+
+```{r}
+
+regexp <- "[[:digit:]]+"
+us_df <- clea_20161024 %>%
+  filter(ctr_n == "US" & yr > 1979) %>%
+  select((5:9), 11:12, 16, 19, 20, 32) %>%
+  mutate(dist = str_extract(cst_n, regexp),
+         sub = tolower(sub)) %>%
+  select(-(4:5))
+
+df_state2 <- df_state %>%
+  mutate(State = ifelse(State < 10, paste0("0", State), State),
+         StateName = tolower(StateName)) %>%
+  select(1:3)
+
+df_final <- us_df %>%
+  left_join(df_state2, by = c("sub" = "StateName")) %>%
+  mutate(party = ifelse(pty == 180, "D", 
+                 ifelse(pty == 583, "R",
+                 ifelse(pty == 409, "L",
+                 ifelse(pty == 252, "G", "O")))),
+         State = as.character(State)) %>%
+  select(1, 2, 11, 12, 10, 13, 6, 7) %>%
+  rename(year = yr,
+         month = mn,
+         state_fips = State,
+         state = StateAbbr,
+         district = dist,
+         total_votes = vv1,
+         votes = cv1) %>%
+  mutate(district = ifelse(is.na(district), 0, as.numeric(district))) %>%
+  dcast(year + month + state_fips + state + district + total_votes ~ party, value.var = "votes", 
+        fun.aggregate = sum) %>%
+  mutate(dPct = D / total_votes,
+         rPct = R / total_votes,
+         oPct = (G + L + O) / total_votes) %>%  # This includes all non-D/R parties, not just "other"
+  arrange(year, state_fips, district)
+
+# Filter uncontested elections because data is not reported for these.
+# We need to get data for these races from another source to have correct state totals.
+df_unc <- df_final %>% filter(total_votes == -992)
+
+fwrite(df_final, "./HouseElectionResults1980to2014.csv")
+
+```

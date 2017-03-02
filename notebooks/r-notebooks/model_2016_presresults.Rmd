@@ -1,0 +1,171 @@
+---
+title: "Visualizing and Modeling 2016 US Presidential Election Results"
+output:
+  html_notebook:
+    theme: yeti
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+---
+
+```{r setup}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+## Load libraries we'll use
+library(data.world) ## for querying directly from data.world
+library(tidyverse)  ## for data wrangling and piping
+library(rms)        ## rms has nice functionality for getting predicted values from model objects
+
+```
+
+We want to determine what county characteristics may be predictors of both the county's final winner
+in the 2016 presidential election, and the margin of victory by which that candidate won.
+
+# Project Setup
+
+## Loading Data
+
+We'll load the county characteristics and 2016 presidential election results datasets directly from data.world.
+
+### County Characteristics
+
+These data are mostly from the 2015 [American Community Survey](https://www.census.gov/programs-surveys/acs/), with additional data from other sources. A
+full data dictionary can be found [here](https://github.com/Data4Democracy/election-transparency/blob/master/data-dictionary/county-level/CountyCharacteristics.md).
+
+```{r load_county_data}
+library(data.world)
+
+## Set connection (see package README for details: https://github.com/datadotworld/data.world-r)
+conn <- data.world()
+
+# ## What data tables are available? (both dplyr and data.world have a query(); must specify)
+# data_list <- data.world::query(conn,
+#                                dataset = 'data4democracy/election-transparency',
+#                                query = "SELECT * FROM Tables")
+# data_list
+
+countyChar <- data.world::query(conn,
+                                dataset = 'data4democracy/election-transparency',
+                                query = "SELECT * FROM CountyCharacteristics")
+
+```
+
+### Voter Registration
+
+We also want party registration data from November 2016, queried from the full `PartyRegistration`
+file. This file includes data pulled from each state's Secretary of State web site. Full data
+dictionary is [here](https://github.com/Data4Democracy/election-transparency/blob/master/data-dictionary/county-level/PartyRegistration.md).
+
+Some of the variable names overlap with names in the next dataset; we'll drop variables that are
+redundant (state/county names/abbreviations and year/month of registration) and add "Reg" to
+everything else except state/county keys to clarify that it's registration info.
+
+```{r load_registration_data}
+voterReg2016 <-
+  data.world::query(conn,
+                    dataset = 'data4democracy/election-transparency',
+                    query = "SELECT * FROM PartyRegistration WHERE Year = 2016 AND Month = 11")
+
+voterReg2016 <- voterReg2016 %>%
+  select(-one_of("CountyName", "StateName", "StateAbbr", "Year", "Month", "YearMonth"))
+
+names(voterReg2016) <- ifelse(names(voterReg2016) %in% c('State', 'County'), names(voterReg2016),
+                              paste0(names(voterReg2016), 'Reg'))
+
+```
+
+### Presidential Election Results by County
+
+These data are collected from a Harvard research project. A full data dictionary can be found [here](https://github.com/Data4Democracy/election-transparency/blob/master/data-dictionary/county-level/PresidentialElectionResults2016.md).
+
+```{r load_results_data}
+presResults2016 <- data.world::query(conn,
+                                     dataset = 'data4democracy/election-transparency',
+                                     query = "SELECT * FROM PresidentialElectionResults2016")
+
+```
+
+## Descriptive Statistics
+
+Let's join the datasets, calculate some proportions, and look at some basic descriptive statistics.
+
+```{r join_data}
+## Check what variables are in common
+# intersect(names(countyChar), names(voterReg2016))
+# intersect(names(countyChar), names(presResults2016))
+
+data2016 <- reduce(list(countyChar, voterReg2016, presResults2016),
+                   left_join,
+                   by = c('County', 'State'))
+
+## Function to quickly calculate a proportion out of TotalPopulation - we'll need to do this a lot
+prop_total <- function(x){ x / data2016$TotalPopulation }
+
+data2016 <- data2016 %>%
+  ## Calculate lots of proportion variables
+  mutate(propMale = prop_total(Male),
+         propKids = prop_total(Age0_4 + Age5_9 + Age10_14 + Age15_19),
+         propAdultsNoTeens = 1 - propKids,
+         ## 15-19 is included in labor force, marital status questions
+         totalAdultsWithTeens = Age15_19 + Age20_24 + Age25_34 + Age35_44 + Age45_54 + Age55_59 +
+           Age60_64 + Age65_74 + Age75_84 + Age85,
+         propAdultsWithTeens = prop_total(totalAdultsWithTeens),
+         ## Only >18 included in education questions
+         totalAdultsNoTeens = Age20_24 + Age25_34 + Age35_44 + Age45_54 + Age55_59 + Age60_64 +
+           Age65_74 + Age75_84 + Age85,
+         propElders = prop_total(Age65_74 + Age75_84 + Age85),
+         propNMarried = NeverMarried / totalAdultsWithTeens,
+         propHispanic = prop_total(Hispanic),
+         propWhite = prop_total(White),
+         propBlack = prop_total(Black),
+         majWhite = propWhite > 0.5,
+         majBlack = propBlack > 0.5,
+         propNoHS = (EdK8 + Ed9_12) / totalAdultsNoTeens,
+         propHS = EdHS / totalAdultsNoTeens,
+         propMoreHS = (EdCollNoDegree + EdAssocDegree + EdBachelorDegree + EdGraduateDegree) /
+           totalAdultsNoTeens,
+         propMfg2015 = MfgEmp2015 / LaborForce,
+         propUnemp = Unemployment / LaborForce,
+         propLaborForce = prop_total(LaborForce),
+         propStein = stein / totalvotes,
+         propJohnson = johnson / totalvotes,
+         propVoters = totalvotes / totalAdultsNoTeens,
+         votedTrump = rPct > 0.5)
+         
+
+## View full data frame
+data2016
+
+```
+
+```{r descriptives, results = 'asis'}
+html(describe(data2016), rmarkdown = TRUE, scroll = TRUE)
+
+```
+
+
+# Question of Interest
+
+We're interested in population characteristics that predict whether a county was won by Hillary Clinton or Donald Trump in the 2016 presidential election. Characteristics under consideration include:
+
+* Proportions of registered Democrats and registered Republicans - *however, because not every state allows registration by party, this is tough to include*
+* Total county population
+* Demographics:
+    * Proportion of males
+    * Proportions of children (0-19 years) and older adults (65 years and up)
+    * Proportion of adults never married
+    * Proportion Hispanic
+    * Whether county is majority white, majority black, or no racial majority
+    * Inverse Simpson diversity index
+        * Is effect of diversity index modified by which race is in the majority?
+    * Proportion with less than high school, high school, and more than high school education
+        * This may be modified by proportion of adults never married? Thinking along the lines of farming community with relatively stable family structures and relatively low rates of college education may be different from communities with high proportions of unmarried adults and low rates of college education.
+* Economy
+    * Proportion manufacturing employment, 2015 *(note: it would be really interesting to interact this with proportion manufacturing employment in 2001, but we'd need 2001 population estimates for this)*
+    * Proportion unemployed, 2015 (unemployed / labor force)
+    * Proportion in the labor force *(how much does this correlate with proportions of children, adults, older adults?)*
+    * Median housing costs
+    * Median household income
+* Urban-rural classification scheme, 2013; perhaps interact this with same in 2006 or 1990? How many counties changed?
+* Proportion of adults who voted
+* Proportion of votes for third-party candidates (Stein, Johnson, and other)

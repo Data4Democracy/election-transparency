@@ -7,7 +7,7 @@
 #' @export
 load2016PresidentialResults <- function() {
 
-  df <- read_csv("https://query.data.world/s/eu9r2968zroqabxcbpbmwj0eb", col_types = 'cccciiiiiin')
+  df <- read_csv("data-raw/president-wide.csv", col_types = 'cccciiiiiin')
 
   df2 <- df %>%
     filter(!(state %in% c('MS', 'ME', 'AK', 'KS'))) %>%
@@ -20,6 +20,7 @@ load2016PresidentialResults <- function() {
     mutate(County=ifelse(County=='46113', '46102', County)) %>% # miscode in the Harvard data
     mutate(County=ifelse(County=='29380', '29085', County)) %>% # Missouri tabulates Kansas City election results separately.  Most of KC is in Jackson County.  Best we can do.
     select(County, clinton, trump, johnson, stein, other, totalvotes) %>%
+    mutate(trump=ifelse(County=='04027', 25165, trump), totalvotes=ifelse(County=='04027', 52416, totalvotes)) %>% # error in Harvard compilation
     as_tibble() # take out when done
 
   # Kansas is not in the harvard dataset.  Loading from spreadsheet converted from SOS PDF obtained from DKE
@@ -120,7 +121,7 @@ load2016PresidentialResults <- function() {
     group_by(Precinct) %>%
     summarize_each("sum")
 
-  precinctCountyMap <- getAlaskaPrecinctCountyMapping()
+  precinctCountyMap <- getAlaskaPrecinctCountyMapping() %>% filter(Year==2013) %>% select(-Year)
 
   ak <- PrecinctVotes  %>%
     inner_join(precinctCountyMap, by=c("Precinct"="Precinct")) %>%

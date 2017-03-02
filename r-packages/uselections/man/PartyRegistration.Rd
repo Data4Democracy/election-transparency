@@ -4,7 +4,7 @@
 \name{PartyRegistration}
 \alias{PartyRegistration}
 \title{Voter Party Registration Dataset}
-\format{A data frame with 3,250 rows and 22 variables:
+\format{A data frame with 3,332 rows and 22 variables:
 \describe{
  \item{State}{2-character FIPS code for the state}
  \item{StateAbbr}{2-character abbreviation for the state}
@@ -53,12 +53,8 @@ county.
 Note:  Not all states capture No Party or Unaffiliated separately.  If these
 are reported separately for a state, they are combined in the N variable.
 
-Note:  Mississippi is currently not included, as it does not post voter registration information on
-its website.  Contact to the Secretary of State is pending.
-
 This data frame has more rows than PresidentialElectionResults2016 because there are 29 extra annual registration obs for Hawaii (x4 counties = 116 rows)
-and 5 extra 2016 monthly obs for Arizona (x15 counties = 75 rows).  Also, as mentioned above, there are no registration data for Mississippi's 82
-counties.  3141+82+75+116=3250.
+and 5 extra 2016 monthly obs for Arizona (x15 counties = 75 rows).  3141+75+116=3332.
 }
 \keyword{datasets}
 

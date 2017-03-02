@@ -1,51 +1,52 @@
-Alabama,01,AL,9
-Alaska,02,AK,3
-Arizona,04,AZ,11
-Arkansas,05,AR,6
-California,06,CA,55
-Colorado,08,CO,9
-Connecticut,09,CT,7
-Delaware,10,DE,3
-District of Columbia,11,DC,3
-Florida,12,FL,29
-Georgia,13,GA,16
-Hawaii,15,HI,4
-Idaho,16,ID,4
-Illinois,17,IL,20
-Indiana,18,IN,11
-Iowa,19,IA,6
-Kansas,20,KS,6
-Kentucky,21,KY,8
-Louisiana,22,LA,8
-Maine,23,ME,4
-Maryland,24,MD,10
-Massachusetts,25,MA,11
-Michigan,26,MI,16
-Minnesota,27,MN,10
-Mississippi,28,MS,6
-Missouri,29,MO,10
-Montana,30,MT,3
-Nebraska,31,NE,5
-Nevada,32,NV,6
-New Hampshire,33,NH,4
-New Jersey,34,NJ,14
-New Mexico,35,NM,5
-New York,36,NY,29
-North Carolina,37,NC,15
-North Dakota,38,ND,3
-Ohio,39,OH,18
-Oklahoma,40,OK,7
-Oregon,41,OR,7
-Pennsylvania,42,PA,20
-Rhode Island,44,RI,4
-South Carolina,45,SC,9
-South Dakota,46,SD,3
-Tennessee,47,TN,11
-Texas,48,TX,38
-Utah,49,UT,6
-Vermont,50,VT,3
-Virginia,51,VA,13
-Washington,53,WA,12
-West Virginia,54,WV,5
-Wisconsin,55,WI,10
-Wyoming,56,WY,3
+State,StateName,StateAbbr,ElectoralVotes,AllowsPartyRegistration,VoterIDLaw,VoterIDLawVerbose,ClosedPrimary
+01,Alabama,AL,9,0,3,Non-strict photo ID,0
+02,Alaska,AK,3,1,2,Non-strict non-photo ID,0
+04,Arizona,AZ,11,0,4,Strict non-photo ID,0
+05,Arkansas,AR,6,0,2,Non-strict non-photo ID,0
+06,California,CA,55,1,1,No ID requirement,0
+08,Colorado,CO,9,1,2,Non-strict non-photo ID,0
+09,Connecticut,CT,7,1,2,Non-strict non-photo ID,0
+10,Delaware,DE,3,1,2,Non-strict non-photo ID,1
+11,District of Columbia,DC,3,1,2,Non-strict non-photo ID,0
+12,Florida,FL,29,1,3,Non-strict photo ID,1
+13,Georgia,GA,16,0,5,Strict photo ID,0
+15,Hawaii,HI,4,0,3,Non-strict photo ID,0
+16,Idaho,ID,4,1,3,Non-strict photo ID,0
+17,Illinois,IL,20,0,1,No ID requirement,0
+18,Indiana,IN,11,0,5,Strict photo ID,0
+19,Iowa,IA,6,1,1,No ID requirement,0
+20,Kansas,KS,6,1,5,Strict photo ID,1
+21,Kentucky,KY,8,1,2,Non-strict non-photo ID,1
+22,Louisiana,LA,8,0,3,Non-strict photo ID,0
+23,Maine,ME,4,1,1,No ID requirement,1
+24,Maryland,MD,10,1,1,No ID requirement,0
+25,Massachusetts,MA,11,1,1,No ID requirement,0
+26,Michigan,MI,16,0,3,Non-strict photo ID,0
+27,Minnesota,MN,10,0,1,No ID requirement,0
+28,Mississippi,MS,6,0,5,Strict photo ID,0
+29,Missouri,MO,10,0,2,Non-strict non-photo ID,0
+30,Montana,MT,3,0,2,Non-strict non-photo ID,0
+31,Nebraska,NE,5,1,1,No ID requirement,1
+32,Nevada,NV,6,1,1,No ID requirement,0
+33,New Hampshire,NH,4,1,5,Strict photo ID,0
+34,New Jersey,NJ,14,1,1,No ID requirement,1
+35,New Mexico,NM,5,1,1,No ID requirement,1
+36,New York,NY,29,1,1,No ID requirement,1
+37,North Carolina,NC,15,1,1,No ID requirement,0
+38,North Dakota,ND,3,0,1,No ID requirement,0
+39,Ohio,OH,18,0,4,Strict non-photo ID,0
+40,Oklahoma,OK,7,1,2,Non-strict non-photo ID,0
+41,Oregon,OR,7,1,1,No ID requirement,0
+42,Pennsylvania,PA,20,1,1,No ID requirement,1
+44,Rhode Island,RI,4,1,3,Non-strict photo ID,0
+45,South Carolina,SC,9,0,2,Non-strict non-photo ID,0
+46,South Dakota,SD,3,1,3,Non-strict photo ID,0
+47,Tennessee,TN,11,0,5,Strict photo ID,0
+48,Texas,TX,38,0,4,Strict non-photo ID,0
+49,Utah,UT,6,1,2,Non-strict non-photo ID,0
+50,Vermont,VT,3,0,1,No ID requirement,0
+51,Virginia,VA,13,0,5,Strict photo ID,0
+53,Washington,WA,12,0,2,Non-strict non-photo ID,0
+54,West Virginia,WV,5,1,1,No ID requirement,0
+55,Wisconsin,WI,10,0,5,Strict photo ID,0
+56,Wyoming,WY,3,1,1,No ID requirement,1

@@ -3,6 +3,7 @@
 library(dplyr)
 library(readr)
 library(rgdal)
+library(stringr)
 
 dfs <- list(
   uselections::loadAlabama(),
@@ -29,7 +30,7 @@ dfs <- list(
   uselections::loadMassachusetts(),
   uselections::loadMichigan(),
   uselections::loadMinnesota(),
-  # Mississippi does not provide county-level registration data...
+  uselections::loadMississippi(),
   uselections::loadMissouri(),
   uselections::loadMontana(),
   uselections::loadNebraska(),
@@ -76,7 +77,15 @@ df <- PartyRegistration %>%
 
 PartyRegistration <- PartyRegistration %>% inner_join(df, by=c("County"="County", "Year"="Year", "Month"="Month"))
 
-states <- read_csv("data-raw/States.txt", col_names=paste0('X', seq(4)), col_types='ccci')
+States <- read_csv("data-raw/States.txt",
+                   col_types=cols_only(State = col_character(),
+                                       StateName = col_character(),
+                                       StateAbbr = col_character(),
+                                       ElectoralVotes = col_integer(),
+                                       AllowsPartyRegistration = col_logical(),
+                                       VoterIDLaw = col_integer(),
+                                       VoterIDLawVerbose = col_character(),
+                                       ClosedPrimary = col_logical()))
 
 countyData <- uselections::getCountyData() %>% select(STATEFP, GEOID, NAME) %>%
   mutate_each("as.character") %>%
@@ -86,28 +95,76 @@ countyData <- uselections::getCountyData() %>% select(STATEFP, GEOID, NAME) %>%
   mutate(NAME=recode(GEOID, "51770"="Roanoke City", "51161"="Roanoke County", .default=NAME)) %>%
   mutate(NAME=recode(GEOID, "51600"="Fairfax City", "51059"="Fairfax County", .default=NAME)) %>%
   mutate(NAME=recode(GEOID, "51620"="Franklin City", "51067"="Franklin County", .default=NAME)) %>%
-  inner_join(states, by=c("STATEFP"="X2")) %>%
-  select(CountyName=NAME, StateName=X1, StateAbbr=X3, County=GEOID)
-
-ElectoralVotes2010 <- states %>% select(State=X2, StateName=X1, StateAbbr=X3, ElectoralVotes=X4)
+  inner_join(States, by=c("STATEFP"="State")) %>%
+  select(CountyName=NAME, StateName, StateAbbr, County=GEOID)
 
 PartyRegistration <- PartyRegistration %>%
-  inner_join(countyData, by=c("County"="County")) %>%
+  inner_join(countyData, by="County") %>%
   mutate(Year=as.integer(Year), Month=as.integer(Month))
 
 PresidentialElectionResults2016 <- load2016PresidentialResults() %>%
-  inner_join(countyData, by=c("County"="County")) %>%
+  inner_join(countyData, by="County") %>%
   mutate(dPct=clinton/totalvotes, rPct=trump/totalvotes, leanD=clinton/trump, leanR=trump/clinton, otherPct=other/totalvotes,
          dDRPct=clinton/(clinton+trump), rDRPct=trump/(clinton+trump), State=substr(County, 1, 2))
 
+CountyArea <- getCountyData() %>% mutate(LandAreaSqMiles=(as.numeric(as.character(ALAND)))*0.000000386102159) %>%
+  select(GEOID, LandAreaSqMiles) %>%
+  mutate(GEOID=as.character(GEOID))
+
+AmericanNations <- read_csv('http://specialprojects.pressherald.com/americannations/county_results.csv',
+                            col_types=cols_only(GEOID=col_integer(), AN_TITLE=col_character())) %>%
+  mutate(County=str_pad(GEOID, 5, 'left', '0'), WoodardAmericanNation=AN_TITLE) %>%
+  select(County, WoodardAmericanNation) %>%
+  filter(!(County %in% c('46113', '02270'))) %>% # these counties don't exist
+  bind_rows(data.frame(County=c('02158', '01059', '46102'), WoodardAmericanNation=c('First Nation', 'Deep South', 'Far West'))) # not in Woodard's list
+
+FoundryPartialStates <- read_csv('data-raw/FoundryPartialStateCounties.txt',
+                                 col_types=cols_only(X1=col_character(), X2=col_character()), col_names=FALSE) %>%
+  inner_join(States, by=c("X1"="StateAbbr")) %>% select(State, X2) %>%
+  inner_join(getCountyData() %>% select(County=GEOID, CountyName=NAME, State=STATEFP) %>%
+               mutate_each("as.character"), by=c('X2'='CountyName', 'State'='State')) %>% select(County)
+
+MexicanBorderCounties <- read_csv('data-raw/MexicanBorderCounties.txt',
+                                  col_types=cols_only(X1=col_character(), X2=col_character()), col_names=FALSE) %>%
+  inner_join(States, by=c("X2"="StateAbbr")) %>% select(State, X1) %>%
+  left_join(getCountyData() %>% select(County=GEOID, CountyName=NAME, State=STATEFP) %>%
+               mutate_each("as.character"), by=c('X1'='CountyName', 'State'='State')) %>%
+  mutate(County=ifelse(X1=='Dona Ana', '35013', County)) %>% select(County)
+
+FoundryCompleteStates <- getCountyData() %>% select(STATEFP, GEOID) %>% mutate_each ('as.character') %>%
+  filter(STATEFP %in% c('26','34','36','39','42')) %>% filter(GEOID != '36061')  %>% # MI, OH, PA, NY, NJ...minus Manhattan
+  select(County=GEOID)
+
+FoundryCounties <- c(FoundryPartialStates$County, FoundryCompleteStates$County)
+
+CountyCharacteristics <- loadCountyACSData() %>% full_join(loadCountyBEAData(), by="County") %>%
+  inner_join(AmericanNations, by="County") %>%
+  inner_join(CountyArea, by=c('County'='GEOID')) %>%
+  inner_join(loadCountyBLSData(), by='County') %>%
+  inner_join(loadCountySSIData(), by='County') %>%
+  left_join(loadCountyCDCData(), by='County') %>%
+  left_join(loadCountyReligionCensusData(), by='County') %>%
+  mutate(State=substr(County, 1, 2),
+         FoundryCounty=County %in% FoundryCounties, MexicanBorderCounty=County %in% MexicanBorderCounties$County)
+
+AlaskaPrecinctBoroughMapping <- getAlaskaPrecinctCountyMapping()
+
 devtools::use_data(PartyRegistration, overwrite=TRUE)
 devtools::use_data(PresidentialElectionResults2016, overwrite=TRUE)
-devtools::use_data(ElectoralVotes2010, overwrite=TRUE)
+devtools::use_data(States, overwrite=TRUE)
+devtools::use_data(CountyCharacteristics, overwrite=TRUE)
+devtools::use_data(AlaskaPrecinctBoroughMapping, overwrite=TRUE)
 
 rm(PartyRegistration)
 rm(PresidentialElectionResults2016)
+rm(AlaskaPrecinctBoroughMapping)
 rm(countyData)
 rm(df)
 rm(dfs)
-rm(states)
-rm(ElectoralVotes2010)
+rm(States)
+rm(CountyCharacteristics)
+rm(CountyArea)
+rm(FoundryPartialStates)
+rm(FoundryCompleteStates)
+rm(FoundryCounties)
+rm(MexicanBorderCounties)

@@ -1,0 +1,100 @@
+---
+title: "Basic uselections visualizations"
+output: html_notebook
+---
+
+```{r echo=FALSE}
+library(uselections)
+library(dplyr)
+library(ggplot2)
+library(ggthemes)
+source('Geo.R')
+```
+
+### County Racial Diversity and Candidate Victory Margin
+
+This scatterplot shows the relationship between racial diversity (as expressed by the Inverse Simpson Diversity Index) and the percentage of
+the vote (excluding third parties) that Hillary Clinton won in each county in 2016.
+```{r fig.width=10}
+df <- PresidentialElectionResults2016 %>%
+    inner_join(CountyCharacteristics %>% select(-State), by="County") %>%
+    mutate(TotalPopulation=TotalPopulation/1000) %>%
+    select(State, CountyName, dDRPct, SimpsonDiversityIndex, TotalPopulation)
+
+  sdf <- PresidentialElectionResults2016 %>%
+    group_by(State) %>%
+    summarize_each("sum", clinton, trump) %>%
+    mutate(winner=ifelse(clinton > trump, 'Clinton', 'Trump'))
+
+  df <- inner_join(df, sdf, by='State')
+
+  ggplot(data=df, aes(x=SimpsonDiversityIndex, y=dDRPct)) + geom_point(aes(size=TotalPopulation, colour=winner)) +
+    scale_color_manual(values=c('blue', 'red')) +
+    theme_economist() +
+    labs(x='Inverse Simpson Diversity Index', y='Clinton margin (excludes third-parties)',
+         size='County Population (x1000)', colour='Statewide Winner')
+```
+### Voter Impact Analysis
+
+This bar chart shows the relative "impact" of a citizen's vote in each state, due to the disparity in the number of citizens per electoral vote across the states.  It is expressed in terms of the number of "extra votes" a state gets (or gives up) by having a smaller (or larger) number of voters per electoral college vote.
+
+```{r fig.width=12}
+
+
+  PartyRegistration2016 <- PartyRegistration %>% filter(Year==2016 & Month==11)
+
+  df <- PartyRegistration2016 %>%
+    group_by(StateAbbr) %>%
+    summarize(RV=sum(Total)) %>%
+    inner_join(ElectoralVotes2010, by=c('StateAbbr'='StateAbbr')) %>%
+    mutate(RVorig=RV, RV=RV/100000,
+           EVPer100KVoters=ElectoralVotes/RV,
+           avgEVPer100KVoters=538/sum(RV),
+           extraVoters=(ElectoralVotes/avgEVPer100KVoters) - RV)
+
+  df2 <- PresidentialElectionResults2016 %>%
+    group_by(StateAbbr) %>%
+    summarize_each("sum", clinton, trump) %>%
+    mutate(winner=ifelse(clinton > trump, 'Clinton', 'Trump')) %>%
+    select(StateAbbr, winner)
+
+  df <- inner_join(df, df2, by=c('StateAbbr'='StateAbbr'))
+
+  ggplot(data=df, aes(x=reorder(StateAbbr, extraVoters), y=extraVoters, fill=winner)) + geom_bar(stat='identity') +
+    labs(y='"Extra" Voters (x100,000)', x=element_blank(),
+         title='Variance in the Impact of Votes',
+         subtitle='Expressed as the effective # of "extra" voters in each state') +
+    scale_fill_manual(values=c('blue', 'red')) +
+    geom_text(data=df %>% filter(extraVoters < 0),
+              aes(label=StateAbbr, y=extraVoters), vjust=1.3) +
+    geom_text(data=df %>% filter(extraVoters >= 0),
+              aes(label=StateAbbr, y=extraVoters), vjust=-1.1) +
+    theme_economist() + theme(axis.text.x=element_blank(),
+                              axis.line.x=element_blank(),
+                              axis.ticks.x=element_blank())
+
+```
+
+### 2016 Results Choropleth
+
+Demonstrating how to draw a map of a state, with the counties shaded by the share of the vote for Clinton (blue) vs. Trump (red).
+```{r fig.width=8, message=FALSE}
+stateDemocraticRepublicanChoropleth(PresidentialElectionResults2016, 'PA', labels=TRUE, RDRatioColumnName='rDRPct',
+      caption='Percent of votes for Republican candidate (Red) versus Democratic candidate (Blue) (excluding third-party and write-in votes)',
+      titleFunction=function(stateName) {
+      paste0("2016 Presidential Election Results for ", stateName)
+    })
+```
+
+### Party Registration Choropleth
+
+We can also draw a map using voter registration / party affiliation, using the same function as above.
+```{r fig.width=8, message=FALSE}
+pr <- PartyRegistration %>% filter(Year==2016 & Month==11)
+stateDemocraticRepublicanChoropleth(pr, 'FL', labels=TRUE, RDRatioColumnName='rDRPct',
+      caption='Percent of voters registered as Republican (Red) versus Democratic (Blue) among voters affiliated with those two parties',
+                                       titleFunction=function(stateName) {
+                                         paste0("2016 Voter Registration Party Affiliation for ", stateName)                                       })
+```
+
+

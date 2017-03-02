@@ -2,6 +2,9 @@ curl -O https://www.elections.alaska.gov/doc/info/2013-SW-Precinct-Proc-Plan.zip
 unzip -d ak 2013-SW-Precinct-Proc-Plan.zip
 mv "ak/SW Proc Shape Files" ak/2013-SW-Proc-Shape-files
 
+curl -O http://www.elections.alaska.gov/doc/info/AMENDED-AK-State-wide-PRECINCT-SHAPE-FILES.zip
+unzip -d ak/2012-Precinct-Shapefiles AMENDED-AK-State-wide-PRECINCT-SHAPE-FILES.zip
+
 curl -O https://www2.census.gov/geo/tiger/TIGER2016/COUNTY/tl_2016_us_county.zip
 unzip -d tl_2016_us_county tl_2016_us_county.zip
 

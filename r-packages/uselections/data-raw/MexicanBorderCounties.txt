@@ -1,0 +1,37 @@
+Cameron,TX
+Hidalgo,TX
+Starr,TX
+Jim Hogg,TX
+Zapata,TX
+Duval,TX
+Webb,TX
+La Salle,TX
+Dimmit,TX
+Zavala,TX
+Maverick,TX
+Uvalde,TX
+Kinney,TX
+Val Verde,TX
+Terrell,TX
+Pecos,TX
+Brewster,TX
+Presidio,TX
+Jeff Davis,TX
+Culberson,TX
+Hudspeth,TX
+El Paso,TX
+Willacy,TX
+Brooks,TX
+Kenedy,TX
+Reeves,TX
+Jim Wells,TX
+Dona Ana,NM
+Luna,NM
+Hidalgo,NM
+Grant,NM
+Cochise,AZ
+Santa Cruz,AZ
+Pima,AZ
+Yuma,AZ
+Imperial,CA
+San Diego,CA

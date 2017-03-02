@@ -5,7 +5,7 @@
 #' @export
 loadAlaska <- function() {
 
-  precinctCountyMap <- getAlaskaPrecinctCountyMapping()
+  precinctCountyMap <- getAlaskaPrecinctCountyMapping() %>% filter(Year==2013) %>% select(-Year)
 
   page <- read_html("http://elections.alaska.gov/statistics/2016/OCT/VOTERS%20Party_PostRegistrationDeadline.htm")
   tables <- page %>% html_nodes("table") %>% html_table(fill=TRUE) %>% tail(-2) %>% head(-1)

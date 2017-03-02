@@ -6,8 +6,8 @@ loadArizona <- function() {
   file_list <- lapply(list.files("data-raw/az", full.names = TRUE), list.files, full.names = TRUE)
 
   df <- NULL
-  for (item in 1:length(file_list)){
-    for (file in 1:length(file_list[[item]])){
+  for (item in seq_along(file_list)){
+    for (file in seq_along(file_list[[item]])){
       year <- format(as.Date(regmatches(file_list[[item]][file], regexpr("[0-9].*[0-9]", file_list[[item]][file])), format="%Y-%m-%d"), "%Y")
       month <- format(as.Date(regmatches(file_list[[item]][file], regexpr("[0-9].*[0-9]", file_list[[item]][file])), format="%Y-%m-%d"), "%m")
 
