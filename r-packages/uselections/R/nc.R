@@ -1,27 +1,32 @@
-#' @importFrom rvest html_nodes html_table
-#' @importFrom xml2 read_html
 #' @import dplyr
-#' @importFrom tibble as_tibble
+#' @importFrom readr read_tsv cols_only col_character col_integer
 #' @export
 loadNorthCarolina <- function() {
 
   countyNameFIPSMapping <- getCountyNameFIPSMapping('37') %>%
     mutate(CountyName=toupper(CountyName))
 
-  page <- read_html("http://vt.ncsbe.gov/voter_stats/results.aspx?date=12-31-2016")
-  tables <- page %>% html_nodes("table") %>% html_table(fill=TRUE)
-
-  df <- tables[[2]] %>%
-    select(CountyName=County, D=Democrats, R=Republicans, L=Libertarians, N=Unaffiliated) %>%
+  df <- read_tsv('data-raw/nc/voter_stats_20161108.txt',
+                 col_types=cols_only(county_desc=col_character(),
+                                     election_date=col_skip(),
+                                     stats_type=col_skip(),
+                                     precinct_abbrv=col_skip(),
+                                     vtd_abbrv=col_skip(),
+                                     party_cd=col_character(),
+                                     race_code=col_skip(),
+                                     ethnic_code=col_skip(),
+                                     sex_code=col_skip(),
+                                     age=col_skip(),
+                                     total_voters=col_integer()
+                 )) %>%
+    group_by(county_desc, party_cd) %>%
+    summarize(total_voters=sum(total_voters)) %>%
+    ungroup() %>%
+    spread(party_cd, total_voters) %>%
+    select(CountyName=county_desc, D=DEM, R=REP, L=LIB, N=UNA) %>%
     mutate(G=NA, O=NA, CountyName=trimws(CountyName)) %>%
-    mutate_each(funs(gsub(x=., pattern=",", replacement="")), -CountyName) %>%
-    mutate_each("as.integer", -CountyName) %>%
-    filter(CountyName != 'Totals') %>%
-    as_tibble() %>%
     inner_join(countyNameFIPSMapping, by=c("CountyName"="CountyName")) %>%
     select(-CountyName) %>%
-    mutate(Year = 2016, Month = 11) # Hardcode until we add historical data
-
-  df
+    mutate(Year = 2016, Month = 11)
 
 }
