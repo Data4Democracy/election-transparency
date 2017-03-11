@@ -5,7 +5,9 @@
 #' @importFrom tibble as_tibble
 #' @export
 loadTexas <- function() {
-
+  #must set working directory to "election-transparency/r-packages/uselections"
+  stopifnot(basename(getwd()) == "uselections")
+  
   countyNameFIPSMapping <- getCountyNameFIPSMapping('48') %>%
     mutate(CountyName=toupper(CountyName))
 
