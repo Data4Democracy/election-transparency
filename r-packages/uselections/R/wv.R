@@ -8,7 +8,8 @@ loadWestVirginia <- function() {
   countyNameFIPSMapping <- getCountyNameFIPSMapping('54') %>%
     mutate(CountyName=toupper(CountyName))
 
-  page <- read_html("http://www.sos.wv.gov/elections/history/Pages/Voter_Registration.aspx")
+  page <- read_html("http://www.sos.wv.gov/elections/voterregistration/pages/voter_registration.aspx")
+
   tables <- page %>% html_nodes("table") %>% html_table(fill=TRUE)
 
   # note: West Virginia puts a series of tables, updated monthly (it appears) on the same page.  So the particular
