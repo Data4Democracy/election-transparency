@@ -6,7 +6,7 @@ loadCountyBEAData <- function() {
 
   # To create these tables:
   # 1. bea.gov >> Interactive Data
-  # 2. GDP & Personal Income
+  # 2. Regional Data / GDP & Personal Income
   # 3. Table:  Local Area Personal Income and Employment >> Personal Income by Major Component and Earnings by Industry (CA5, CA5N)
   # 4. Select NAICS or SIC, depending on timeframe
   # 5. Major Area=County
@@ -18,7 +18,7 @@ loadCountyBEAData <- function() {
   df <- NULL
 
   for (sheet in c('Mfg1', 'Mfg2', 'Total1', 'Total2')) {
-    dft <- read.xlsx('data-raw/CountyEmployment.xlsx', sheet=sheet, rows=7:3144, colNames=FALSE, na.strings=c('(D)', '(L)', '(NA)')) %>%
+    dft <- read.xlsx('data-raw/CountyEmployment-Manufacturing.xlsx', sheet=sheet, rows=7:3144, colNames=FALSE, na.strings=c('(D)', '(L)', '(NA)')) %>%
       select(-X2)
     colCount <- ncol(dft) - 1
     originalNames <- paste0('X', 3:(3+colCount-1))

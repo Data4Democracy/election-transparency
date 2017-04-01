@@ -26,12 +26,22 @@
 \item{Age75_84}{County Population Age 75-84 (2015 ACS 5-year estimate)}
 \item{Age85}{County Population Age 85+ (2015 ACS 5-year estimate)}
 \item{MedianAge}{Median Age in County (2015 ACS 5-year estimate)}
-\item{White}{County Population, Race=White (2015 ACS 5-year estimate)}
-\item{Black}{County Population, Race=Black (2015 ACS 5-year estimate)}
-\item{AmericanIndianAlaskaNative}{County Population, Race=American Indian / Alaska Native (2015 ACS 5-year estimate)}
-\item{Asian}{County Population, Race=Asian (2015 ACS 5-year estimate)}
-\item{NativeHawaiianPacificIslander}{County Population, Race=Native Hawaiian / Pacific Islander (2015 ACS 5-year estimate)}
-\item{OtherRace}{County Population, Race=Other (2015 ACS 5-year estimate)}
+\item{White}{County Population, Race=White, alone or in combination (2015 ACS 5-year estimate)}
+\item{Black}{County Population, Race=Black/African American, alone or in combination (2015 ACS 5-year estimate)}
+\item{AmericanIndianAlaskaNative}{County Population, Race=American Indian / Alaska Native, alone or in combination (2015 ACS 5-year estimate)}
+\item{Asian}{County Population, Race=Asian, alone or in combination (2015 ACS 5-year estimate)}
+\item{NativeHawaiianPacificIslander}{County Population, Race=Native Hawaiian / Pacific Islander, alone or in combination (2015 ACS 5-year estimate)}
+\item{OtherRace}{County Population, Race=Other, alone or in combination (2015 ACS 5-year estimate)}
+\item{WhiteAlone}{County Population, Race=White (2015 ACS 5-year estimate)}
+\item{BlackAlone}{County Population, Race=Black/African American (2015 ACS 5-year estimate)}
+\item{AmericanIndianAlaskaNativeAlone}{County Population, Race=American Indian / Alaska Native (2015 ACS 5-year estimate)}
+\item{AsianAlone}{County Population, Race=Asian (2015 ACS 5-year estimate)}
+\item{NativeHawaiianPacificIslanderAlone}{County Population, Race=Native Hawaiian / Pacific Islander (2015 ACS 5-year estimate)}
+\item{OtherRaceAlone}{County Population, Race=Other (2015 ACS 5-year estimate)}
+\item{WhiteBlack}{County Population, Race=White and Black/African American (2015 ACS 5-year estimate)}
+\item{WhiteAmericanIndianAlaskaNative}{County Population, Race=White and American Indian / Alaska Native (2015 ACS 5-year estimate)}
+\item{WhiteAsian}{County Population, Race=White and Asian (2015 ACS 5-year estimate)}
+\item{BlackAmericanIndianAlaskaNative}{County Population, Race=Black/African American and American Indian / Alaska Native (2015 ACS 5-year estimate)}
 \item{Hispanic}{County Population, Ethnicity=Hispanic (2015 ACS 5-year estimate)}
 \item{SimpsonDiversityIndex}{Inverse Simpson Diversity Index}
 \item{Population25Plus}{County Population Age 25+ (2015 ACS 5-year estimate)}

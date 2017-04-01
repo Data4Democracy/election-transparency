@@ -30,6 +30,16 @@ loadCountyACSData <- function() {
                                                X60=col_integer(),
                                                X64=col_integer(),
                                                X68=col_number(),
+                                               X128=col_integer(),
+                                               X132=col_integer(),
+                                               X136=col_integer(),
+                                               X156=col_integer(),
+                                               X196=col_integer(),
+                                               X208=col_integer(),
+                                               X216=col_integer(),
+                                               X220=col_integer(),
+                                               X224=col_integer(),
+                                               X228=col_integer(),
                                                X236=col_integer(),
                                                X240=col_integer(),
                                                X244=col_integer(),
@@ -39,7 +49,10 @@ loadCountyACSData <- function() {
                                                X264=col_integer())) %>%
     rename(County=X2, TotalPopulation=X6, Male=X8, Female=X12, Age0_4=X16, Age5_9=X20, Age10_14=X24, Age15_19=X28,
            Age20_24=X32, Age25_34=X36, Age35_44=X40, Age45_54=X44, Age55_59=X48, Age60_64=X52, Age65_74=X56, Age75_84=X60,
-           Age85=X64, MedianAge=X68, White=X236, Black=X240, AmericanIndianAlaskaNative=X244, Asian=X248, NativeHawaiianPacificIslander=X252, OtherRace=X256,
+           Age85=X64, MedianAge=X68,
+           WhiteAlone=X128, BlackAlone=X132, AmericanIndianAlaskaNativeAlone=X136, AsianAlone=X156, NativeHawaiianPacificIslanderAlone=X196,
+           OtherRaceAlone=X208, WhiteBlack=X216, WhiteAmericanIndianAlaskaNative=X220, WhiteAsian=X224, BlackAmericanIndianAlaskaNative=X228,
+           White=X236, Black=X240, AmericanIndianAlaskaNative=X244, Asian=X248, NativeHawaiianPacificIslander=X252, OtherRace=X256,
            Hispanic=X264) %>%
     mutate(SimpsonDenom=White+Black+AmericanIndianAlaskaNative+Asian+NativeHawaiianPacificIslander+OtherRace,
       SimpsonDiversityIndex=1 - ((White/SimpsonDenom)^2 + (Black/SimpsonDenom)^2 + (AmericanIndianAlaskaNative/SimpsonDenom)^2 +
