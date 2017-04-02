@@ -1,0 +1,296 @@
+---
+title: "Economic Inequality and The Trump Vote: A County-Level Look"
+author: "@msmerlak"
+output: html_document
+---
+
+```{r}
+library(readr)
+library("dplyr")
+library(magrittr)
+
+library(data.world)
+library(tidyr)
+library(purrr)
+library(caret)
+library(randomForest)
+
+library(openxlsx)
+
+library(choroplethr)
+library(choroplethrMaps)
+
+library(plotly)
+```
+
+# Introduction
+
+Economic inequality has been called ["the defining challenge of our time"](http://www.politico.com/story/2013/12/obama-income-inequality-100662), and indeed it's hard to understate the scale of the phenomenon: according to [Oxfam's latest estimate](https://www.oxfam.org/en/pressroom/pressreleases/2017-01-16/just-8-men-own-same-wealth-half-world), the eight richest men in the world own as much wealth as the poorest 3.5 billion people. 
+In november 2016, Donald J. Trump was elected President of the United States. It's a major shift in US politics.
+
+Are these two historic phenomena somehow related? It's natural to assume that a growing frustration with inequality could have fueled the Trump vote. A study by [Bruegel](http://bruegel.org/2016/11/income-inequality-boosted-trump-vote/) concluded in that direction.
+
+County-level data provide fine-grained information to test this hypothesis, and that's what I'll do here---after recalling some basic facts about the 2016 US election ifself.
+
+# The 2016 Election: Some Facts 
+
+It's well known that Trump lost the popular vote. This, as well as the media focus on "swing states", suggests that the election was a close call. At the county level, though, it was anything but. 
+
+Let's begin by visualizing the election results county by county, using the data at [data.world](data.world).
+
+```{r}
+## Get data from data.world
+conn <- data.world()
+presResults2016 <- data.world::query(conn,
+                                     dataset = 'data4democracy/election-transparency',
+                                     query = "SELECT * FROM PresidentialElectionResults2016")
+
+GOP_results <- presResults2016 %>%
+  select(County, rPct) %>% 
+  rename(region = County)
+
+GOP_results %>% 
+  rename(value = rPct) %>%
+  county_choropleth(title = 'Trump vote across US counties')
+
+```
+
+Summary statistics for Trump votes are telling---the median Trump vote is 66%, and more than 80% of counties gave Trump a supermajority:
+
+
+```{r}
+summary(GOP_results$rPct)
+
+absolute_maj <- filter(GOP_results, rPct > .5)
+
+100* length(absolute_maj$rPct) / length(GOP_results$rPct)
+
+plot_ly(x = GOP_results$rPct, type = "histogram")
+```
+
+Thus, when viewed from the perspective of county-level voting patterns, Trump's victory was a landslide. He won almost everywhere, generally with a very large margin. 
+
+# Trump Vote Vs. Economic Inequality 
+
+The Economic Policy Institute published a report with county-level data on economic inequality for 2010 - 2013: [Sommeiller et al (2016)](http://www.epi.org/publication/income-inequality-in-the-us/#epi-toc-20). I'll start from there.
+
+```{r}
+income_county_raw <- read.xlsx("~/ML/election-transparency/data-raw/sommeiller_et_al_2016/top-incomes-since-1917_vs2013-06-15-2016.xlsx", sheet = "Data_CO")
+
+income_county <- income_county_raw[c("cntyname","year", "cofips","SP99_100")] %>%
+  rowwise() %>% mutate(SP99_100 = as.numeric(SP99_100)) %>% 
+  rename(region = cofips) %>% 
+  rowwise() %>% mutate(region = str_sub(region, 1, -4)) %>%
+  rowwise() %>% mutate(region = as.numeric(region)) 
+```
+
+## Economic Inequality Across the US
+
+The variablel `SP99_100` is the share of total income captured by the top 1%: a simple measure of economic inequality. There's quite a bit of variation across US counties, with a coefficient of variation of 37%.
+
+```{r}
+top_1_percent_2013 <- income_county %>% 
+  filter(year == 2013) %>% 
+  select(- year, - cntyname) %>%
+  drop_na
+
+sd(top_1_percent_2013$SP99_100)/mean(top_1_percent_2013$SP99_100)
+
+plot_ly(top_1_percent_2013, x = ~SP99_100, type = "histogram") %>% 
+  layout(title = "Distribution income share of top 1% across US counties (2013)")
+```
+
+Let's make a map of income inequality for (say) 2013.
+
+```{r}
+top_1_percent_chlor <- top_1_percent_2013 %>% 
+  rename(value = SP99_100) %>%
+  rowwise() %>% mutate(region = as.numeric(region))
+
+county_choropleth(top_1_percent_chlor, title = "Income share of the top 1% across US counties")
+```
+
+## Economic Inequality Is Not Correlated With Trump Vote 
+
+At first sight, the spatial patterns observed in the Trump vote (Midwest, strong clustering) do not appear to recur with economic inequality. Let's plot the two variables against each other. 
+
+```{r}
+ineq_GOP <- join(top_1_percent_2013, GOP_results, by = "region") %>% drop_na
+plot_ly(ineq_GOP, x=~rPct, y = ~SP99_100, type = "scatter")
+```
+
+There's no apparent trend. In fact, the Pearson correlation coefficient between economic inequality and Trump vote is slightly *negative*:
+
+```{r}
+cor.test(ineq_GOP$SP99_100, ineq_GOP$rPct)
+```
+
+## Nor Is Economic Inequality Change 
+
+
+If Trump voters aren't particularly sensitive to the *level* of economic inequality in their county, could it be that they care about its *change*? Let's look at the relative change of the share of income captured by the top 1% between 2010 and 2013:
+
+```{r}
+ineq_GOP <- ineq_GOP %>%  
+  rename(SP99_100_13 = SP99_100)
+
+top_1_percent_2010 <- income_county %>% 
+  filter(year == 2010 )%>% 
+  select(- year, - cntyname) %>% 
+  rename(SP99_100_10 = SP99_100)
+
+ineq_GOP <- join(ineq_GOP, top_1_percent_2010, by = "region") %>% drop_na
+
+ineq_GOP <- ineq_GOP %>% mutate(SP99_100_change = (SP99_100_13 - SP99_100_10)/SP99_100_10)
+
+plot_ly(ineq_GOP, x = ~SP99_100_change, type = "histogram") %>% 
+  layout(title = "Distribution of variation of income share of top 1% across US counties (2010 - 2013)")
+```
+
+
+Big changes in just three years! In some counties, the share of the top 1% has increased by up to 50%; in others, it has decreased by similar amounts. 
+
+Is the Trump vote correlated with `SP99_100_change`? No:
+
+```{r}
+plot_ly(ineq_GOP, x=~rPct, y = ~SP99_100_change)
+cor.test(x=ineq_GOP$rPct, y = ineq_GOP$SP99_100_change)
+```
+
+## Importance of economic inequality in a random forest regressor
+
+The notebook `kht_modeling_results.Rmd` presents an analysis of the Trump vote in terms of county characteristics, with a random forest regressor explaining 82% of the variance. I'll reuse the pro-processing done there:
+
+```{r}
+# pre-processing of county characteristics from kht_modeling_results.Rmd
+
+## Get data from data.world
+conn <- data.world()
+countyChar <- data.world::query(conn,
+                                dataset = 'data4democracy/election-transparency',
+                                query = "SELECT * FROM CountyCharacteristics")
+voterReg2016 <- data.world::query(conn,
+                                  dataset = 'data4democracy/election-transparency',
+                                  query = "SELECT * FROM PartyRegistration WHERE Year = 2016 AND Month = 11")
+presResults2016 <- data.world::query(conn,
+                                     dataset = 'data4democracy/election-transparency',
+                                     query = "SELECT * FROM PresidentialElectionResults2016")
+
+## Prep tables and join them
+voterReg2016 <- voterReg2016 %>%
+  select(-one_of("CountyName", "StateName", "StateAbbr", "Year", "Month", "YearMonth"))
+names(voterReg2016) <- ifelse(names(voterReg2016) %in% c('State', 'County'), names(voterReg2016),
+                              paste0(names(voterReg2016), 'Reg'))
+data2016 <- reduce(list(countyChar, voterReg2016, presResults2016),
+                   left_join,
+                   by = c('County', 'State'))
+
+## @jenniferthompson's feature engineering
+prop_total <- function(x){ x / data2016$TotalPopulation }
+data2016 <- data2016 %>%
+  mutate(propMale = prop_total(Male),
+         propKids = prop_total(Age0_4 + Age5_9 + Age10_14 + Age15_19),
+         propAdultsNoTeens = 1 - propKids,
+         totalAdultsWithTeens = Age15_19 + Age20_24 + Age25_34 + Age35_44 + Age45_54 + Age55_59 +
+           Age60_64 + Age65_74 + Age75_84 + Age85,
+         propAdultsWithTeens = prop_total(totalAdultsWithTeens),
+         totalAdultsNoTeens = Age20_24 + Age25_34 + Age35_44 + Age45_54 + Age55_59 + Age60_64 +
+           Age65_74 + Age75_84 + Age85,
+         propElders = prop_total(Age65_74 + Age75_84 + Age85),
+         propNMarried = NeverMarried / totalAdultsWithTeens,
+         propHispanic = prop_total(Hispanic),
+         propWhite = prop_total(White),
+         propBlack = prop_total(Black),
+         majWhite = propWhite > 0.5,
+         majBlack = propBlack > 0.5,
+         propNoHS = (EdK8 + Ed9_12) / totalAdultsNoTeens,
+         propHS = EdHS / totalAdultsNoTeens,
+         propMoreHS = (EdCollNoDegree + EdAssocDegree + EdBachelorDegree + EdGraduateDegree) /
+           totalAdultsNoTeens,
+         propMfg2015 = MfgEmp2015 / LaborForce,
+         propUnemp = Unemployment / LaborForce,
+         propLaborForce = prop_total(LaborForce),
+         propStein = stein / totalvotes,
+         propJohnson = johnson / totalvotes,
+         propVoters = totalvotes / totalAdultsNoTeens)
+
+data2016 <- data2016 %>%
+    mutate(propUninsured = prop_total(Uninsured),
+           propForeignBorn = prop_total(ForeignBorn),
+           propNonCitizen = prop_total(NonCitizen),
+           propDisability = prop_total(Disability),
+           propTotalSSI = prop_total(TotalSSI),
+           propAgedSSI = prop_total(AgedSSI),
+           propBlindDisabledSSI = prop_total(BlindDisabledSSI),
+           propOASDI = prop_total(OASDI),
+           propMfg1970 = MfgEmp1970 / TotalEmp1970,
+           propMfg1980 = MfgEmp1980 / TotalEmp1980,
+           propMfg1990 = MfgEmp1990 / TotalEmp1990,
+           propMfg2001 = MfgEmp2001 / TotalEmp2001)
+
+for_big_rf <- data2016 %>%
+  select(rDRPct, County, # Objective function and an index for joining later
+         MedianHouseholdIncome, TotalPopulation, MedianAge, LandAreaSqMiles, # Big dumb basic stats
+         propMale, propKids, propAdultsNoTeens, propNMarried, propForeignBorn, propNonCitizen, # Demography
+         propHispanic, propWhite, propBlack, majWhite, majBlack, SimpsonDiversityIndex, # Racial demography
+         propNoHS, propHS, propMoreHS, # Education
+         propMfg1970, propMfg1980, propMfg1990, propMfg2001, propMfg2015, propUnemp, propLaborForce, # Labor
+         propVoters, propJohnson, propStein, # Political (avoiding registration b/c of partyless reg. issue)
+         MedianHousingCosts, MedianHouseholdIncome, propUninsured, # Financial
+         propDisability, propTotalSSI, propAgedSSI, propBlindDisabledSSI, propOASDI, # SSI recipients
+         NCHS_UrbanRural1990, NCHS_UrbanRural2006, NCHS_UrbanRural2013) %>% # Area classifications
+  # RF can't handle strings
+  mutate(NCHS_UrbanRural1990 = factor(NCHS_UrbanRural1990),
+         NCHS_UrbanRural2006 = factor(NCHS_UrbanRural2006),
+         NCHS_UrbanRural2013 = factor(NCHS_UrbanRural2013),
+         propStein = ifelse(is.na(propStein), 0, propStein)) %>% # Where Stein wasn't on the ballot, we'll fill in 0
+  # Can't handle NA either
+  filter(!is.na(MedianHouseholdIncome), !is.na(propTotalSSI), !is.na(propAgedSSI), !is.na(propBlindDisabledSSI), !is.na(propOASDI),
+         !is.na(propMfg1970), !is.na(propMfg1980), !is.na(propMfg1990), !is.na(propMfg2001), !is.na(propMfg2015),
+         !is.na(NCHS_UrbanRural1990), !is.na(NCHS_UrbanRural2013), !is.na(NCHS_UrbanRural2006))
+
+# This results in the loss of 815 of 3,141 counties because of missing data. Not good but maybe we can get some of those back if we can show that the missing variables aren't predictive.
+
+```
+
+Next I add the economic inequality variables:
+
+```{r}
+ineq <- ineq_GOP %>% 
+  select(region, SP99_100_13, SP99_100_change) %>% 
+  rename(County = region)
+
+for_big_rf <- join(for_big_rf, ineq, by = "County") %>% drop_na
+```
+
+And re-train the random forest:
+
+```{r}
+# Train/test split
+trIndex <- createDataPartition(for_big_rf$rDRPct, p = 0.8, list = F)
+tr <- select(for_big_rf, -County)[trIndex,]
+te <- select(for_big_rf, -County)[-trIndex,]
+
+# Train our RF
+big_rf <- randomForest(rDRPct ~ ., tr)
+
+# How's it perform? Looking at MSE here
+big_rf
+```
+
+The addition of economic inequality does not increase the explanatory power of the model. When we look at variable importance, we find that `SP99_100_13` (the level in 2013) and `SP99_100_change` (the relative change 2010-2013) are largely irrelevant:
+
+```
+
+
+```{r, fig.height=5}
+varImpPlot(big_rf, n.var = 44)
+```
+
+# Conclusion
+
+Although both economic inequality and Trump vote have large variations across the US, there appears to be no clear association between the two variables---at least not at the county level. This conclusion is confirmed by an analysis, at the state level, of the relationship between the number of billionaires and Trump vote (done elsewhere; I may add it to this notebook later on). 
+
+This is not say that the growth of economic inequality is not playing a key role in US politics. First, as noted by Bruegel, there is the possibility that economic inequality correlates with the *growth* in Republican votes over time. I didn't look at such longitudinal trends here (though all the ingredients are in the notebook). Second, it is easy to imagine that voters react to a diffuse perception that inequalities are getting worse globally, even if they are not sensitive to the level or change of inequality in their own counties. To caricature, my analysis does not exclude that voters in Alabama voted for Trump as a consequence of growing inequalities in the San Francisco Bay Area. 
+
+Still, a negative result debunking a preconception can be as important as a positive result revealing a pattern. I hope that this quick-and-dirty notebook can spur an interesting discussion at D4D.     
