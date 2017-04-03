@@ -135,7 +135,7 @@ With this "tidy" exit-polling data, we are ready to do some interesting analysis
 - which candidate quality mattered most? 
 
 Trump is often labeled as a politics disrupter by the media. I'm espeially curious about how his image roots in the electorates' minds. First, we can look at the distributions of responses across states. From the graph below, it shows the poorer the state is, the larger percentage the option of "Can bring change" is chosen. Missouri and Kentucky are the states with the highest percentages of choosing "Can bring change" and the lowest percentages of choosing "Right experience". 
-```{r }
+```{r fig.width=8, fig.height=9}
 p <- exit_poll_cleaned_df %>% filter(questions == 'Which candidate quality mattered most?') %>% ggplot(aes(x = state, y = options_perc, fill = options)) + ggtitle('Distribution of Candidate Quality Responses by State, In Percentage') + geom_bar(stat="identity") + coord_flip() 
 
 ggplotly(p)
@@ -145,15 +145,16 @@ ggplotly(p)
 
 
 I also created the Dumdbell chart to show the contrasts in terms of the percentage of supporting rate in the "Can bring change" option for various states. Clearly, among the people who chose "Can bring change", Trump has much greater favors, especially in red states.
-```{r }
+```{r fig.width=8, fig.height=9}
 cbc_plot_df <- exit_poll_cleaned_df %>% filter(questions == 'Which candidate quality mattered most?', options == 'Can bring change')
 
 cbc_plot_df$state <- factor(cbc_plot_df$state, levels = cbc_plot_df$state[order(cbc_plot_df$Trump_perc)])
 
-p <- plot_ly(cbc_plot_df, color = I("gray80")) %>% add_segments(x =~Clinton_perc, xend =~Trump_perc, y = ~state, yend=~state, showlegend = FALSE) %>% add_markers(x=~Clinton_perc, y = ~state, name = "Clinton", color = I("blue")) %>% add_markers(x = ~Trump_perc, y = ~state, name = "Trump", color = I("red")) %>% layout(title = "Which candidate quality mattered most? Can he/she bring change?", xaxis = list(title = "Percentage of supporting rate(%)"), margin = list(l =65), yaxis = list(ticklen = 5, tickwidth =2)
+p <- plot_ly(cbc_plot_df, color = I("gray80")) %>% add_segments(x =~Clinton_perc, xend =~Trump_perc, y = ~state, yend=~state, showlegend = FALSE) %>% add_markers(x=~Clinton_perc, y = ~state, name = "Clinton", color = I("blue")) %>% add_markers(x = ~Trump_perc, y = ~state, name = "Trump", color = I("red")) %>% layout(title = "Which candidate quality mattered most? Can he/she bring change?", xaxis = list(title = "Percentage of supporting rate(%)"), margin = list(l =150), yaxis = list(ticklen = 5, tickwidth =2)
 )
 
 p
+#chart_link = plotly_POST(p, filename="options-bar-stacked")
 # or go to https://plot.ly/~mrapple/93/which-candidate-quality-mattered-most-can-heshe-bring-change/
 ```
 
@@ -161,7 +162,7 @@ p
 - Most important issue facing the country
 
 Obviously, Economy is the biggest concern for every state. It would be interesting to further check whether the electorate in the republican winning states also favor Trump for addressing their economy concern.
-```{r}
+```{r fig.width=8, fig.height=9}
 p <- exit_poll_cleaned_df %>% filter(questions == 'Most important issue facing the country') %>% ggplot(aes(x = state, y = options_perc, fill = options)) + ggtitle('Distribution of Important Issue Responses by State, In Percentage') + geom_bar(stat="identity") + coord_flip() 
 
 ggplotly(p)
@@ -170,12 +171,12 @@ ggplotly(p)
 ```
 
 It's interesting to see that most of states do favor Clinton who is more capable to address the economy issue, even for republican states like Texas and Florida, and also for the surprising tipping states like Minesota and Michigan. However, note that the conclusion drawed here is just based on the available data and without considering error margins.
-```{r}
+```{r fig.width=8, fig.height=9}
 economy_plot_df <- exit_poll_cleaned_df %>% filter(questions == 'Most important issue facing the country', options == 'Economy')
 
 economy_plot_df$state <- factor(economy_plot_df$state, levels = economy_plot_df$state[order(economy_plot_df$Trump_perc)])
 
-p <- plot_ly(economy_plot_df, color = I("gray80")) %>% add_segments(x =~Clinton_perc, xend =~Trump_perc, y = ~state, yend=~state, showlegend = FALSE) %>% add_markers(x=~Clinton_perc, y = ~state, name = "Clinton", color = I("blue")) %>% add_markers(x = ~Trump_perc, y = ~state, name = "Trump", color = I("red")) %>% layout(title = "Which candidate can address the Economy issue", xaxis = list(title = "Percentage of supporting rate(%)"), margin = list(l =65), yaxis = list(ticklen = 5, tickwidth =2)
+p <- plot_ly(economy_plot_df, color = I("gray80")) %>% add_segments(x =~Clinton_perc, xend =~Trump_perc, y = ~state, yend=~state, showlegend = FALSE) %>% add_markers(x=~Clinton_perc, y = ~state, name = "Clinton", color = I("blue")) %>% add_markers(x = ~Trump_perc, y = ~state, name = "Trump", color = I("red")) %>% layout(title = "Which candidate can address the Economy issue", xaxis = list(title = "Percentage of supporting rate(%)"), margin = list(l =150), yaxis = list(ticklen = 5, tickwidth =2)
 )
 
 p
