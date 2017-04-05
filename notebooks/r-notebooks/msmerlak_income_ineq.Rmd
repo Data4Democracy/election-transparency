@@ -75,7 +75,9 @@ Thus, when viewed from the perspective of county-level voting patterns, Trump's 
 The Economic Policy Institute published a report with county-level data on economic inequality for 2010 - 2013: [Sommeiller et al (2016)](http://www.epi.org/publication/income-inequality-in-the-us/#epi-toc-20). I'll start from there.
 
 ```{r}
-income_county_raw <- read.xlsx("~/ML/election-transparency/data-raw/sommeiller_et_al_2016/top-incomes-since-1917_vs2013-06-15-2016.xlsx", sheet = "Data_CO")
+#income_county_raw <- read.xlsx("~/ML/election-transparency/data-raw/sommeiller_et_al_2016/top-incomes-since-1917_vs2013-06-15-2016.xlsx", sheet = #"Data_CO")
+
+income_county_raw <- read.xlsx("http://go.epi.org/unequalstates2016data", sheet = "Data_CO")
 
 income_county <- income_county_raw[c("cntyname","year", "cofips","SP99_100")] %>%
   rowwise() %>% mutate(SP99_100 = as.numeric(SP99_100)) %>% 
