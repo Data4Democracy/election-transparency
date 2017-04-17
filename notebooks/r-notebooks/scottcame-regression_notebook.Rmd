@@ -1,15 +1,32 @@
 ---
-title: "Regression Analysis"
+title: "Regression Analysis of the 2016 Election"
 output:
   html_notebook: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r echo=FALSE}
+OFFLINE_MODE <- TRUE
+```
+
+In this notebook, we assemble a county-level dataset of 2016 Presidential election results, voter registration counts, and various demographic, economic, and other county characteristics, and then fit a least-squares (linear) regression model to estimate the effects of various factors on the percentage of the vote won by Donald Trump in each county.
+
+```{r echo=FALSE, message=FALSE, warn=FALSE, results='hide'}
 library(dplyr, quietly=TRUE)
 library(readr)
+library(ggplot2)
+library(choroplethr)
+library(choroplethrMaps)
+library(ggthemes)
 
-registrationDf <- read_csv('https://query.data.world/s/6v39jc6h7ofcuo8jm8dnaoyg6',
+if (OFFLINE_MODE) {
+  registrationDf <- uselections::PartyRegistration
+  countyCharacteristicsDf <- uselections::CountyCharacteristics
+  results2016Df <- uselections::PresidentialElectionResults2016
+} else {
+  
+  registrationDf <- read_csv('https://query.data.world/s/6v39jc6h7ofcuo8jm8dnaoyg6',
                            col_types=cols_only(County=col_character(),
                                                Year = col_integer(),
                                                Month = col_integer(),
@@ -18,17 +35,15 @@ registrationDf <- read_csv('https://query.data.world/s/6v39jc6h7ofcuo8jm8dnaoyg6
                                                L=col_integer(),
                                                N=col_integer(),
                                                O=col_integer(),
-                                               R=col_integer())) %>%
-  mutate_each(funs(ifelse(is.na(.), 0, .)), -County) %>%
-  mutate(RegisteredVoters=D+G+L+N+O+R) %>%
-  filter(Year==2016 & Month==11) %>%
-  select(County, RegisteredVoters)
-
-countyCharacteristicsDf <- read_csv('https://query.data.world/s/2iliwt06bj17uv219jc25m9cj',
+                                               R=col_integer()))
+  
+  countyCharacteristicsDf <- read_csv('https://query.data.world/s/2iliwt06bj17uv219jc25m9cj',
                                     col_types=cols_only(County=col_character(),
                                                         MedianHouseholdIncome=col_integer(),
                                                         Male=col_integer(),
                                                         MedianAge=col_double(),
+                                                        Age20_24=col_integer(),
+                                                        Age25_34=col_integer(),
                                                         Age55_59=col_integer(),
                                                         Age60_64=col_integer(),
                                                         Age65_74=col_integer(),
@@ -39,7 +54,10 @@ countyCharacteristicsDf <- read_csv('https://query.data.world/s/2iliwt06bj17uv21
                                                         EdK8=col_integer(),
                                                         Ed9_12=col_integer(),
                                                         EdHS=col_integer(),
+                                                        EdBachelorDegree=col_integer(),
+                                                        EdGraduateDegree=col_integer(),
                                                         MedianHousingCosts=col_double(),
+                                                        SimpsonDiversityIndex=col_double(),
                                                         MfgEmp1980=col_integer(),
                                                         MfgEmp1990=col_integer(),
                                                         MfgEmp2015=col_integer(),
@@ -54,6 +72,7 @@ countyCharacteristicsDf <- read_csv('https://query.data.world/s/2iliwt06bj17uv21
                                                         Married=col_integer(),
                                                         Uninsured=col_integer(),
                                                         ForeignBorn=col_integer(),
+                                                        NonCitizen=col_integer(),
                                                         NCHS_UrbanRural2013=col_character(),
                                                         WoodardAmericanNation=col_character(),
                                                         FoundryCounty=col_logical(),
@@ -64,8 +83,8 @@ countyCharacteristicsDf <- read_csv('https://query.data.world/s/2iliwt06bj17uv21
                                                         MormonAdherents=col_integer(),
                                                         BlindDisabledSSI=col_integer(),
                                                         SSIPayments=col_integer()))
-
-results2016Df <- read_csv('https://query.data.world/s/c32vr9rs909k67ikm6zguite9',
+  
+  results2016Df <- read_csv('https://query.data.world/s/c32vr9rs909k67ikm6zguite9',
                           col_types=cols_only(County=col_character(),
                                               CountyName=col_character(),
                                               StateAbbr=col_character(),
@@ -73,7 +92,17 @@ results2016Df <- read_csv('https://query.data.world/s/c32vr9rs909k67ikm6zguite9'
                                               johnson=col_integer(),
                                               stein=col_integer(),
                                               other=col_integer(),
-                                              rDRPct=col_double())) %>%
+                                              rDRPct=col_double()))
+  
+}
+
+registrationDf <- registrationDf %>%
+  mutate_each(funs(ifelse(is.na(.), 0, .)), -County) %>%
+  mutate(RegisteredVoters=D+G+L+N+O+R) %>%
+  filter(Year==2016 & Month==11) %>%
+  select(County, RegisteredVoters)
+
+results2016Df <- results2016Df %>%
   mutate_each(funs(ifelse(is.na(.), 0, .)), -County) %>%
   mutate(ThirdPartyVotes=johnson+stein+other) %>%
   select(County, totalvotes, ThirdPartyVotes, rDRPct, CountyName, StateAbbr)
@@ -81,67 +110,166 @@ results2016Df <- read_csv('https://query.data.world/s/c32vr9rs909k67ikm6zguite9'
 df <- results2016Df %>% inner_join(registrationDf, by="County") %>% inner_join(countyCharacteristicsDf, by="County") %>%
   mutate(Male=Male/TotalPopulation,
          Age55Plus=(Age55_59+Age60_64+Age65_74+Age75_84+Age85)/TotalPopulation,
+         Age20_34=(Age20_24+Age25_34)/TotalPopulation,
          White=White/TotalPopulation,
          Hispanic=Hispanic/TotalPopulation,
          EdHS=(EdK8+Ed9_12+EdHS)/TotalPopulation,
+         EdCollege=(EdBachelorDegree+EdGraduateDegree)/TotalPopulation,
          UnemploymentRate=Unemployment/LaborForce,
          PopulationDensity=TotalPopulation/LandAreaSqMiles,
+         PopChange=(TotalPopulation-TotalPopulation2010)/TotalPopulation2010,
          Married=Married/TotalPopulation,
          Uninsured=Uninsured/TotalPopulation,
          ForeignBorn=ForeignBorn/TotalPopulation,
+         NonCitizen=NonCitizen/TotalPopulation,
+         TexasBorderCounty=MexicanBorderCounty*(StateAbbr=='TX'),
          SSIPerCapita=SSIPayments/TotalPopulation,
          Turnout=totalvotes/RegisteredVoters,
          ThirdPartyVoteShare=ThirdPartyVotes/totalvotes,
          TrumpWin=rDRPct > .5,
          TotalReligiousPct=TotalReligiousAdherents/TotalPopulation,
-         EvangelicalPct=ifelse(is.na(EvangelicalAdherents), 0, EvangelicalAdherents)/TotalPopulation,
-         CatholicPct=ifelse(is.na(CatholicAdherents), 0, CatholicAdherents)/TotalPopulation,
-         MormonPct=ifelse(is.na(MormonAdherents), 0, MormonAdherents)/TotalPopulation,
+         EvangelicalPct=ifelse(is.na(EvangelicalAdherents), 0, EvangelicalAdherents)/TotalReligiousAdherents,
+         CatholicPct=ifelse(is.na(CatholicAdherents), 0, CatholicAdherents)/TotalReligiousAdherents,
+         MormonPct=ifelse(is.na(MormonAdherents), 0, MormonAdherents)/TotalReligiousAdherents,
          MfgEmp1980=MfgEmp1980/TotalEmp1980,
          MfgEmp1990=MfgEmp1990/TotalEmp1990,
          MfgEmp2015=MfgEmp2015/TotalEmp2015,
          MfgEmpChange1980_2015=MfgEmp2015-MfgEmp1980,
          MfgEmpChange1990_2015=MfgEmp2015-MfgEmp1990,
+         LFPR=LaborForce/TotalPopulation,
+         Hispanic_x_Turnout=Hispanic*Turnout,
+         Male_x_Turnout=Male*Turnout,
+         TotalReligiousPct_x_Turnout=TotalReligiousPct*Turnout,
+         White_x_MedianHouseholdIncome=White*MedianHouseholdIncome,
          Rural=NCHS_UrbanRural2013 %in% c('Noncore (nonmetropolitan)','Micropolitan (nonmetropolitan)')
   ) %>%
-  select(County, rDRPct, TrumpWin, Turnout, ThirdPartyVoteShare, MedianHouseholdIncome, MedianAge, MedianHousingCosts,
-         MfgEmpChange1980_2015, MfgEmpChange1990_2015, Rural, WoodardAmericanNation, FoundryCounty, BlindDisabledSSI,
-         Age55Plus, White, Hispanic, EdHS, UnemploymentRate, PopulationDensity, Married, Uninsured, ForeignBorn, SSIPerCapita,
-         TotalReligiousPct, EvangelicalPct, CatholicPct, MormonPct,
-         CountyName, StateAbbr, MexicanBorderCounty)
+  select(County, rDRPct, TrumpWin, Turnout, ThirdPartyVoteShare, MedianHouseholdIncome, MedianAge, MedianHousingCosts, Age20_24,
+         MfgEmpChange1980_2015, MfgEmpChange1990_2015, Rural, WoodardAmericanNation, FoundryCounty, BlindDisabledSSI, Age20_34,
+         Age55Plus, White, Hispanic, EdHS, UnemploymentRate, PopulationDensity, Married, Uninsured, ForeignBorn, NonCitizen,
+         SSIPerCapita, SimpsonDiversityIndex, TexasBorderCounty, RegisteredVoters, TotalVotes=totalvotes, TotalPopulation,
+         TotalReligiousPct, EvangelicalPct, CatholicPct, MormonPct, EdCollege, LFPR, Male,
+         Hispanic_x_Turnout, Male_x_Turnout,TotalReligiousPct_x_Turnout,White_x_MedianHouseholdIncome,
+         CountyName, StateAbbr, MexicanBorderCounty, PopChange)
 
 
 ```
 
-## Basic Least Squares
+## The Model
 
-OLS regression of [% Trump two-party vote] on significant independent variables.
+An ordinary least-squares (OLS) regression of several explanatory variables on Trump's percentage of the two-party vote provides us with a basic understanding of the partial relationships.  The selected variables were chosen through trial-and-error, in pursuit of the goal of maximizing the explanatory power of the regression (maximum R-squared) while including only significant variables.
 
 ```{r kc}
-ddf <- df %>% select(-MfgEmpChange1980_2015, -MfgEmpChange1990_2015, -BlindDisabledSSI) %>% na.omit()
-result <- lm(rDRPct ~ Turnout+ThirdPartyVoteShare+MedianHouseholdIncome+MedianHousingCosts+Age55Plus+White+Hispanic+
-               EdHS+Married+Uninsured+ForeignBorn+SSIPerCapita+FoundryCounty+MexicanBorderCounty+
-               TotalReligiousPct+EvangelicalPct+MormonPct, data=ddf)
+ddf <- df %>%
+  select(-MfgEmpChange1980_2015, -MfgEmpChange1990_2015, -BlindDisabledSSI) %>%
+  na.omit()
+result <- lm(rDRPct ~ Turnout+ThirdPartyVoteShare+LFPR+
+               MedianHouseholdIncome+MedianHousingCosts+Age55Plus+Male+
+               White+Hispanic+EdHS+EdCollege+Married+Uninsured+NonCitizen+
+               SSIPerCapita+TexasBorderCounty+TotalReligiousPct+
+               EvangelicalPct+MormonPct+UnemploymentRate+SimpsonDiversityIndex,
+             data=ddf)
 summary(result)
 ```
 
-This model achieves a fairly good goodness-of-fit (R-squared).  But it is interesting to examine which counties deviated the most from the fitted values.
+This model achieves a fairly good goodness-of-fit (R-squared).  Many of the explanatory variables have a sign consistent with the results of exit polls reported in the aftermath of the election.  For example, the percentages of white, married, and religious residents in a county is positively, strongly and significantly correlated with Trump's percentage of the vote.  Conversely, the percentages of Hispanic and college-educated population are negatively correlated with Trump's vote share.
+
+There are some interesting results, though, that have not been as widely reported, if at all:
+
+* A 33% decrease in the voter turnout in a county, all else being equal, suggests an additional 1% of the two-party vote going for Clinton
+* There is approximately a 1-1 relationship between increase in third-party turnout with Clinton vote share--for every increase of one percent of the county's vote share going to third parties, Clinton's vote share also would be expected to rise by one percent
+* Counties with lower labor force participation, employment, income, and housing costs have lower expected Trump vote shares
+* There is a distinct Texas border county effect, apart from the demographics of those counties, in Clinton's favor
+* The percentage of a county's residents without health insurance has a larger relationship (.3) in Trump's favor than the Hispanic percentage (.08) does in Clinton's
+* Contrary to the pre-election suggestion that Mormon voters might vote for independent candidate Evan McMullin or choose not to vote, there is a strong positive correlation--even controlling for the other variables in the model--between a county's Mormon adherent percentage and Trump vote share
+
+## Residual Analysis
+
+It is also interesting to examine the residuals from the regression above.
 
 ```{r resid}
 ddf$rDRPct_fitted <- fitted(result)
-ddf <- ddf %>% mutate(rDRPct_residual=rDRPct-rDRPct_fitted) %>% arrange(rDRPct_residual)
+ddf <- ddf %>%
+  mutate(rDRPct_residual=rDRPct-rDRPct_fitted, predictedTrumpWin=rDRPct_fitted > .5) %>%
+  arrange(rDRPct_residual)
 ```
 
-Here are the ten counties where Trump most under-performed what the model would predict (actual % of two-party vote was lower than model-predicted):
+The residual analysis allows us to consider the counties that deviate the most from the predicted Trump vote share, given each county's characteristics.
+
+The quartile values provided in the regression results indicate that the residuals are symmetrical about the expected mean of zero; a histogram confirms this:
+
+```{r hist}
+nBins <- 500
+scaleFac <- nrow(ddf) / nBins
+ggplot(data=ddf) +
+  geom_histogram(aes(x=rDRPct_residual), bins=nBins) +
+  theme_economist() + labs(x='Residual Value', y='Residual Count') +
+  stat_function(fun=function(x, mean, sd) {scaleFac*dnorm(x, mean, sd)},
+                args=list(mean=mean(ddf$rDRPct_residual),
+                          sd=sd(ddf$rDRPct_residual)))
+```
+
+Nevertheless, it is interesting to see if there is any geographic or other pattern to the residuals, as that may suggest other explanatory variables that we might include in the model to improve the fit.  For a broad view, here is a county choropleth of the continental US that displays (using the familiar red-blue shading) the over (red) and under (blue) performance of Trump's actual vote share versus what the model predicts:
+
+```{r choro, message=FALSE, warning=FALSE, results='hide'}
+data(state.regions)
+conus <- setdiff(state.regions$region, c('alaska','hawaii'))
+county_choropleth(ddf %>%
+                    mutate(region=as.double(County), value=rDRPct_residual),
+                  num_colors=1, state_zoom=conus) +
+  scale_fill_gradient2(low="#0099F7", high="#F11712", midpoint=0,
+                       limits=c(-0.5, 0.5)) + labs(fill='Residual')
+```
+
+Just eyeballing this choropleth, for the vast majority of the counties, the model fits fairly well (this is confirmed by the residual quartiles, which indicate that the predicted values for half the counties are within 4 points of the actual Trump vote share--represented by the faintest blue and red hues on the map).  The extremes of Trump over-performance are in the Great Plains, eastern Colorado and New Mexico, the Big Bend region of Texas, eastern Oregon, and the Central Valley of California.  Clinton over-performed in Cascadia, the western half of the Four Corners region, extreme southern Texas, and the upper Mississippi Valley.
+
+These are the ten counties where Trump most under-performed what the model would predict (actual % of two-party vote was lower than model-predicted):
 
 ```{r}
-head(ddf %>% select(CountyName, StateAbbr, rDRPct, rDRPct_fitted, rDRPct_residual), n=10)
+head(ddf %>% select(County=CountyName,
+                    State=StateAbbr,
+                    `Actual Trump Win %`=rDRPct,
+                    `Predicted Trump Win %`=rDRPct_fitted,
+                    Deviation=rDRPct_residual), n=10)
 ```
-It is interesting to note that all ten of these counties are on or very near the Texas-Mexico border.
-
 And the ten counties where Trump most over-performed what the model would predict:
 
 ```{r}
-tail(ddf %>% select(CountyName, StateAbbr, rDRPct, rDRPct_fitted, rDRPct_residual), n=10)
+tail(ddf %>% select(County=CountyName,
+                    State=StateAbbr,
+                    `Actual Trump Win %`=rDRPct,
+                    `Predicted Trump Win %`=rDRPct_fitted,
+                    Deviation=rDRPct_residual), n=10)
+```
+
+```{r echo=FALSE}
+correctCounties <- nrow(filter(ddf, TrumpWin == predictedTrumpWin))
+counties <- nrow(ddf)
+incorrectStates <- predictedStateResults <- ddf %>%
+  mutate(TotalVotes=TotalVotes*(1-ThirdPartyVoteShare)) %>%
+  mutate(PredictedTrumpVotes=rDRPct_fitted*TotalVotes, PredictedClintonVotes=(1-rDRPct_fitted)*TotalVotes,
+         ActualTrumpVotes=rDRPct*TotalVotes,
+         ActualClintonVotes=(1-rDRPct)*TotalVotes) %>%
+  select(StateAbbr, PredictedTrumpVotes, ActualTrumpVotes,
+         PredictedClintonVotes, ActualClintonVotes, TotalVotes) %>%
+  group_by(StateAbbr) %>%
+  summarize_each("sum") %>%
+  mutate(PredictedTrumpWin=PredictedTrumpVotes > PredictedClintonVotes,
+         ActualTrumpWin=ActualTrumpVotes > ActualClintonVotes) %>%
+  select(State=StateAbbr, PredictedTrumpWin, ActualTrumpWin,
+         PredictedTrumpVotes, ActualTrumpVotes,
+         PredictedClintonVotes, ActualClintonVotes, TotalVotes) %>%
+  filter(PredictedTrumpWin != ActualTrumpWin)
+```
+
+Overall, the model correctly predicts the winner in `r correctCounties` out of `r counties` counties, which is pretty good.  However, when we aggregate the predicted county vote totals at the state level, the model gets `r nrow(incorrectStates)` states wrong:
+
+```{r echo=FALSE}
+incorrectStates  %>%
+  mutate(`Actual Trump Vote %`=sprintf('%.2f', 100*ActualTrumpVotes/TotalVotes),
+         `Predicted Trump Vote %`=sprintf('%.2f', 100*PredictedTrumpVotes/TotalVotes),
+         `Predicted Winner`=ifelse(PredictedTrumpWin, 'Trump', 'Clinton'),
+         `Actual Winner`=ifelse(ActualTrumpWin, 'Trump', 'Clinton')) %>%
+  select(State, `Predicted Winner`, `Actual Winner`,
+         `Predicted Trump Vote %`, `Actual Trump Vote %`)
 ```
 
