@@ -6,6 +6,9 @@ output:
     toc: yes
     toc_depth: 4
     toc_float: yes
+  html_document:
+    toc: yes
+    toc_depth: '4'
 ---
 
 ```{r setup}
@@ -130,7 +133,7 @@ data2016
 
 ```
 
-```{r descriptives, results = 'asis'}
+```{r descriptives1, results = 'asis'}
 html(describe(data2016), rmarkdown = TRUE, scroll = TRUE)
 
 ```
@@ -162,7 +165,7 @@ We're interested in population characteristics that predict whether a county was
 * Proportion of adults who voted
 * Proportion of votes for third-party candidates (Stein, Johnson, and other)
 
-```{r descriptives, results = 'asis'}
+```{r descriptives2, results = 'asis'}
 # Load the caret and e1071 library
 library(caret)
 library(e1071)
