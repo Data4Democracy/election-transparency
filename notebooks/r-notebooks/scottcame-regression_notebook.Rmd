@@ -1,7 +1,9 @@
 ---
 title: "Regression Analysis of the 2016 Election"
 output:
-  html_notebook: default
+  html_notebook: 
+    code_folding: hide
+    toc: yes
   html_document: default
   pdf_document: default
 ---
@@ -156,7 +158,7 @@ df <- results2016Df %>% inner_join(registrationDf, by="County") %>% inner_join(c
 
 ## The Model
 
-An ordinary least-squares (OLS) regression of several explanatory variables on Trump's percentage of the two-party vote provides us with a basic understanding of the partial relationships.  The selected variables were chosen through trial-and-error, in pursuit of the goal of maximizing the explanatory power of the regression (maximum R-squared) while including only significant variables.
+An ordinary least-squares (OLS) regression of several explanatory variables on Trump's percentage of the two-party vote provides us with a basic understanding of the partial relationships.  The selected variables were chosen through trial-and-error, in pursuit of the goal of maximizing the explanatory power of the regression (maximum R-squared) while including only significant variables. For definitions of the variables, see https://github.com/Data4Democracy/election-transparency/blob/master/r-packages/uselections/README.md.
 
 ```{r kc}
 ddf <- df %>%
@@ -175,11 +177,12 @@ This model achieves a fairly good goodness-of-fit (R-squared).  Many of the expl
 
 There are some interesting results, though, that have not been as widely reported, if at all:
 
-* A 33% decrease in the voter turnout in a county, all else being equal, suggests an additional 1% of the two-party vote going for Clinton
-* There is approximately a 1-1 relationship between increase in third-party turnout with Clinton vote share--for every increase of one percent of the county's vote share going to third parties, Clinton's vote share also would be expected to rise by one percent
-* Counties with lower labor force participation, employment, income, and housing costs have lower expected Trump vote shares
+* A 31% decrease in the voter turnout in a county, all else being equal, suggests an additional 1% of the two-party vote going for Clinton
+* There is approximately a 1-1 relationship between increase in third-party turnout with Clinton vote share--for every increase of one percent of the county's vote share going to third parties, Clinton's vote share also would be expected to rise by about 1.2 percent
+* Counties with lower labor force participation, employment, and housing costs have lower expected Trump vote shares, but higher median income is associated
+with a lower expected Trump vote share
 * There is a distinct Texas border county effect, apart from the demographics of those counties, in Clinton's favor
-* The percentage of a county's residents without health insurance has a larger relationship (.3) in Trump's favor than the Hispanic percentage (.08) does in Clinton's
+* The percentage of a county's residents without health insurance has a larger relationship (.3) in Trump's favor than the Hispanic percentage (.1) does in Clinton's
 * Contrary to the pre-election suggestion that Mormon voters might vote for independent candidate Evan McMullin or choose not to vote, there is a strong positive correlation--even controlling for the other variables in the model--between a county's Mormon adherent percentage and Trump vote share
 
 ## Residual Analysis
@@ -272,4 +275,4 @@ incorrectStates  %>%
   select(State, `Predicted Winner`, `Actual Winner`,
          `Predicted Trump Vote %`, `Actual Trump Vote %`)
 ```
-
+An area of potential further research here is to look at refining the model--including, potentially, with non-linear approaches--to improve its predictive power.
