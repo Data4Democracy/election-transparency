@@ -38,23 +38,29 @@ getAlaskaPrecinctCountyMapping <- function() {
       matchedBoroughs <- character()
       precincts <- character()
 
+      writeMessage <- function(a, pa, precinctName, boroughName) {
+        writeLines(paste0("Precinct ", gsub("[\r\n]", "", precinctName), " also matched borough ", boroughName, " with area of ", a,
+                          " out of a total precinct area of ", precinctArea, " square km (", 100*a/pa, "%)"))
+      }
+
       for (ps in precinctShapefileList) {
         maxArea <- 0.0
         bestMatch <- NA
         bestMatchName <- NA
+        precinctArea <- gArea(ps) / 1000000
         for (bs in boroughShapefileList) {
           i <- gIntersection(bs, ps)
           if (!is.null(i)) {
             a <- gArea(i) / 1000000
             if (a > maxArea) {
               if (maxArea >= 5) {
-                precinctArea <- gArea(ps) / 1000000
-                writeLines(paste0("Precinct ", gsub("[\r\n]", "", ps$NAME), " also matched borough ", bestMatchName, " with area of ", maxArea,
-                                  " out of a total precinct area of ", precinctArea, " square km (", 100*maxArea/precinctArea, "%)"))
+                writeMessage(maxArea, precinctArea, ps$NAME, bestMatchName)
               }
               maxArea <- a
               bestMatch <- as.character(bs$COUNTYFP)
               bestMatchName <- as.character(bs$NAMELSAD)
+            } else if (a >= 5) {
+              writeMessage(a, precinctArea, ps$NAME, bs$NAMELSAD)
             }
           }
         }
