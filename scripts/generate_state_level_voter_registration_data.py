@@ -83,7 +83,7 @@ def populate_same_day_states(url= "https://ballotpedia.org/Same-day_voter_regist
     states_list=same_day_lists_span.find_next('ul')
     for li in states_list.find_all('li'):
         state_name=re.sub(references_regex, '', li.text)
-        state_row_data=[[ state_name,True,"implemented prior to 2016 election","Same-day voter registration available. (Implemented prior to 2016 election)",url]]
+        state_row_data=[[ state_name,True,"implemented prior to 2016 election","Same-day voter registration available (Implemented prior to 2016 election). ",url]]
         state_row=pd.DataFrame(state_row_data,columns=same_day_columns,index=[state_name])
         same_day_data=same_day_data.append(state_row)
 
@@ -92,7 +92,7 @@ def populate_same_day_states(url= "https://ballotpedia.org/Same-day_voter_regist
     second_states_list=(same_day_lists_span.find_next('ul')).find_next('ul')
     for li in second_states_list.find_all('li'):
         state_name=re.sub(references_regex, '', li.text)
-        state_row_data=[[state_name,True,"implemented after 2016 election","Same-day voter registration available. (Implemented after 2016 election)",url]]
+        state_row_data=[[state_name,True,"implemented after 2016 election","Same-day voter registration available (implemented after 2016 election). ",url]]
         state_row=pd.DataFrame(state_row_data,columns=same_day_columns,index=[state_name])
         same_day_data=same_day_data.append(state_row)
 
@@ -152,7 +152,7 @@ def populate_online_reg_data(url="https://ballotpedia.org/Online_voter_registrat
 
                 if(yes_check):
                     online_flag=True
-                    online_description="Online voter registration is available."
+                    online_description="Online voter registration is available. "
                 if(no_check):
                     online_flag=False
                     online_description=""
@@ -161,7 +161,7 @@ def populate_online_reg_data(url="https://ballotpedia.org/Online_voter_registrat
             else: #there is no link
                 if 'Enacted in' in str(cell): #cell contains online registration enactment dates
                     online_flag=True
-                    online_description="Online voter registration is available. ("+cell.text+")"
+                    online_description="Online voter registration is available ("+cell.text+"). "
                     online_note = cell.text
 
         if(state_name is not ""): #state data was populated
@@ -238,7 +238,7 @@ def populate_all_voter_registration_data():
     all_state_data.drop('state_code_mi',axis=1,inplace=True)
     all_columns = (all_state_data.columns.get_values()).tolist()
 
-    all_state_data['markdown']="**"+all_state_data['state_name']+"**" + ": "+ all_state_data['online_description']+" "+all_state_data['same_day_description']+"  Mail in registration is available."
+    all_state_data['markdown']="**"+all_state_data['state_name']+"**" + ": "+ all_state_data['online_description'] + all_state_data['same_day_description']+"Mail in registration is available."
     return all_state_data
 
 def write_out_registration_data(md_path="../data-dictionary/state-level/state_registration_options.md",csv_path="../data-raw/state_registration_options.csv"):
