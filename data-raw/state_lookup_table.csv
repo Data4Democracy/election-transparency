@@ -49,4 +49,4 @@ id,name,abbreviation,country,type,sort,status,occupied,notes,fips_state,assoc_pr
 "48","West Virginia","WV","USA","state","10","current","occupied","","54","W.Va.","III","3","South","5","South Atlantic","4"
 "49","Wisconsin","WI","USA","state","10","current","occupied","","55","Wis.","V","2","Midwest","3","East North Central","7"
 "50","Wyoming","WY","USA","state","10","current","occupied","","56","Wyo.","VIII","4","West","8","Mountain","10"
-"51","Washington DC","DC","USA","capitol","10","current","occupied","","11","","III","3","South","5","South Atlantic","D.C."
+"51","District of Columbia","DC","USA","capitol","10","current","occupied","","11","","III","3","South","5","South Atlantic","D.C."
