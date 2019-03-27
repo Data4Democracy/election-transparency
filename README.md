@@ -41,3 +41,4 @@ The following is a non-exhaustive list of the skills that are useful for this pr
 * **Data Analysis and Modelling**
 
 
+Update: The slack channel #election-transparency was archived on March 26, 2019 after no response to ask for project leads. It was also marked as "archived" on the website.
